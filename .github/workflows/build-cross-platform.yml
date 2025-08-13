@@ -28,51 +28,40 @@ jobs:
     
     - name: Build Windows executable
       run: |
-        pyinstaller --onefile --windowed --name CANAnalyzer ^
-          --add-data "ui;ui" ^
-          --hidden-import=PySide6.QtCore ^
-          --hidden-import=PySide6.QtWidgets ^
-          --hidden-import=PySide6.QtGui ^
-          --hidden-import=can.interfaces.slcan ^
-          --hidden-import=can.interfaces.socketcan ^
-          --hidden-import=can.interfaces.vector ^
-          --hidden-import=can.interfaces.pcan ^
-          --hidden-import=can.interfaces.kvaser ^
-          --hidden-import=udsoncan ^
-          --hidden-import=isotp ^
-          --hidden-import=serial ^
-          --hidden-import=serial.tools.list_ports ^
-          --hidden-import=subprocess ^
-          --hidden-import=threading ^
-          --hidden-import=queue ^
-          --hidden-import=platform ^
-          main.py
+        pyinstaller --onefile --windowed --name CANAnalyzer --add-data "ui;ui" --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtGui --hidden-import=can.interfaces.slcan --hidden-import=can.interfaces.socketcan --hidden-import=can.interfaces.vector --hidden-import=can.interfaces.pcan --hidden-import=can.interfaces.kvaser --hidden-import=udsoncan --hidden-import=isotp --hidden-import=serial --hidden-import=serial.tools.list_ports --hidden-import=subprocess --hidden-import=threading --hidden-import=queue --hidden-import=platform main.py
     
     - name: Create portable package
       run: |
-        mkdir CANAnalyzer-Windows-Portable
-        copy dist\CANAnalyzer.exe CANAnalyzer-Windows-Portable\
-        echo @echo off > CANAnalyzer-Windows-Portable\install.bat
-        echo echo Installing CAN Analyzer to Program Files... >> CANAnalyzer-Windows-Portable\install.bat
-        echo if not exist "C:\Program Files\CANAnalyzer" mkdir "C:\Program Files\CANAnalyzer" >> CANAnalyzer-Windows-Portable\install.bat
-        echo copy CANAnalyzer.exe "C:\Program Files\CANAnalyzer\" >> CANAnalyzer-Windows-Portable\install.bat
-        echo echo Installation complete! >> CANAnalyzer-Windows-Portable\install.bat
-        echo pause >> CANAnalyzer-Windows-Portable\install.bat
+        New-Item -ItemType Directory -Name "CANAnalyzer-Windows-Portable"
+        Copy-Item "dist\CANAnalyzer.exe" "CANAnalyzer-Windows-Portable\"
         
-        echo # CAN Analyzer for Windows > CANAnalyzer-Windows-Portable\README.txt
-        echo. >> CANAnalyzer-Windows-Portable\README.txt
-        echo ## Quick Start: >> CANAnalyzer-Windows-Portable\README.txt
-        echo 1. Double-click CANAnalyzer.exe to run >> CANAnalyzer-Windows-Portable\README.txt
-        echo 2. Connect your CANable device >> CANAnalyzer-Windows-Portable\README.txt
-        echo 3. Select "slcan" driver and COM port >> CANAnalyzer-Windows-Portable\README.txt
-        echo 4. Click Connect! >> CANAnalyzer-Windows-Portable\README.txt
-        echo. >> CANAnalyzer-Windows-Portable\README.txt
-        echo ## System Install: >> CANAnalyzer-Windows-Portable\README.txt
-        echo - Run install.bat as Administrator for system-wide installation >> CANAnalyzer-Windows-Portable\README.txt
-        echo. >> CANAnalyzer-Windows-Portable\README.txt
-        echo Supports: CANable, Vector, PCAN, Kvaser, IXXAT hardware >> CANAnalyzer-Windows-Portable\README.txt
+        $installBat = @"
+        @echo off
+        echo Installing CAN Analyzer to Program Files...
+        if not exist "C:\Program Files\CANAnalyzer" mkdir "C:\Program Files\CANAnalyzer"
+        copy CANAnalyzer.exe "C:\Program Files\CANAnalyzer\"
+        echo Installation complete!
+        pause
+        "@
+        $installBat | Out-File -FilePath "CANAnalyzer-Windows-Portable\install.bat" -Encoding ASCII
         
-        powershell Compress-Archive -Path CANAnalyzer-Windows-Portable -DestinationPath CANAnalyzer-Windows-v1.0.zip
+        $readme = @"
+        # CAN Analyzer for Windows
+        
+        ## Quick Start:
+        1. Double-click CANAnalyzer.exe to run
+        2. Connect your CANable device
+        3. Select "slcan" driver and COM port
+        4. Click Connect!
+        
+        ## System Install:
+        - Run install.bat as Administrator for system-wide installation
+        
+        Supports: CANable, Vector, PCAN, Kvaser, IXXAT hardware
+        "@
+        $readme | Out-File -FilePath "CANAnalyzer-Windows-Portable\README.txt" -Encoding UTF8
+        
+        Compress-Archive -Path "CANAnalyzer-Windows-Portable" -DestinationPath "CANAnalyzer-Windows-v1.0.zip"
     
     - name: Upload Windows artifacts
       uses: actions/upload-artifact@v3
