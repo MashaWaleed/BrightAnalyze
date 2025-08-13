@@ -1,0 +1,31 @@
+
+FROM python:3.11-windowsservercore
+
+# Set working directory
+WORKDIR /src
+
+# Install dependencies first (better caching)
+COPY requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install pyinstaller
+RUN pip install PySide6 python-can udsoncan can-isotp pyserial
+
+# Copy source code
+COPY . .
+
+# Build executable
+RUN pyinstaller --onefile --windowed --name CANAnalyzer \
+    --add-data "ui;ui" \
+    --hidden-import=PySide6.QtCore \
+    --hidden-import=PySide6.QtWidgets \
+    --hidden-import=PySide6.QtGui \
+    --hidden-import=can.interfaces.slcan \
+    --hidden-import=can.interfaces.vector \
+    --hidden-import=can.interfaces.pcan \
+    --hidden-import=udsoncan \
+    --hidden-import=isotp \
+    --hidden-import=serial.tools.list_ports \
+    main.py
+
+# Default command
+CMD ["cmd"]

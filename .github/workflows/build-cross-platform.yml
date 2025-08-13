@@ -1,0 +1,175 @@
+
+name: Build Cross-Platform Executables
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install PySide6 python-can udsoncan can-isotp pyserial
+    
+    - name: Build Windows executable
+      run: |
+        pyinstaller --onefile --windowed --name CANAnalyzer ^
+          --add-data "ui;ui" ^
+          --hidden-import=PySide6.QtCore ^
+          --hidden-import=PySide6.QtWidgets ^
+          --hidden-import=PySide6.QtGui ^
+          --hidden-import=can.interfaces.slcan ^
+          --hidden-import=can.interfaces.socketcan ^
+          --hidden-import=can.interfaces.vector ^
+          --hidden-import=can.interfaces.pcan ^
+          --hidden-import=can.interfaces.kvaser ^
+          --hidden-import=udsoncan ^
+          --hidden-import=isotp ^
+          --hidden-import=serial ^
+          --hidden-import=serial.tools.list_ports ^
+          --hidden-import=subprocess ^
+          --hidden-import=threading ^
+          --hidden-import=queue ^
+          --hidden-import=platform ^
+          main.py
+    
+    - name: Create portable package
+      run: |
+        mkdir CANAnalyzer-Windows-Portable
+        copy dist\CANAnalyzer.exe CANAnalyzer-Windows-Portable\
+        echo @echo off > CANAnalyzer-Windows-Portable\install.bat
+        echo echo Installing CAN Analyzer to Program Files... >> CANAnalyzer-Windows-Portable\install.bat
+        echo if not exist "C:\Program Files\CANAnalyzer" mkdir "C:\Program Files\CANAnalyzer" >> CANAnalyzer-Windows-Portable\install.bat
+        echo copy CANAnalyzer.exe "C:\Program Files\CANAnalyzer\" >> CANAnalyzer-Windows-Portable\install.bat
+        echo echo Installation complete! >> CANAnalyzer-Windows-Portable\install.bat
+        echo pause >> CANAnalyzer-Windows-Portable\install.bat
+        
+        echo # CAN Analyzer for Windows > CANAnalyzer-Windows-Portable\README.txt
+        echo. >> CANAnalyzer-Windows-Portable\README.txt
+        echo ## Quick Start: >> CANAnalyzer-Windows-Portable\README.txt
+        echo 1. Double-click CANAnalyzer.exe to run >> CANAnalyzer-Windows-Portable\README.txt
+        echo 2. Connect your CANable device >> CANAnalyzer-Windows-Portable\README.txt
+        echo 3. Select "slcan" driver and COM port >> CANAnalyzer-Windows-Portable\README.txt
+        echo 4. Click Connect! >> CANAnalyzer-Windows-Portable\README.txt
+        echo. >> CANAnalyzer-Windows-Portable\README.txt
+        echo ## System Install: >> CANAnalyzer-Windows-Portable\README.txt
+        echo - Run install.bat as Administrator for system-wide installation >> CANAnalyzer-Windows-Portable\README.txt
+        echo. >> CANAnalyzer-Windows-Portable\README.txt
+        echo Supports: CANable, Vector, PCAN, Kvaser, IXXAT hardware >> CANAnalyzer-Windows-Portable\README.txt
+        
+        powershell Compress-Archive -Path CANAnalyzer-Windows-Portable -DestinationPath CANAnalyzer-Windows-v1.0.zip
+    
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: CANAnalyzer-Windows
+        path: |
+          CANAnalyzer-Windows-v1.0.zip
+          dist/CANAnalyzer.exe
+        retention-days: 90
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          CANAnalyzer-Windows-v1.0.zip
+          dist/CANAnalyzer.exe
+        name: CAN Analyzer ${{ github.ref_name }}
+        body: |
+          ## 🚀 CAN Analyzer Cross-Platform Release
+          
+          ### ✅ Windows Features:
+          - Native Windows 10/11 executable (no Python required)
+          - SLCAN support for CANable devices  
+          - Vector, PCAN, Kvaser hardware support
+          - COM port auto-detection
+          - Professional UDS diagnostics
+          - DBC file support
+          
+          ### 📦 Downloads:
+          - **CANAnalyzer.exe** - Single executable (run directly)
+          - **CANAnalyzer-Windows-v1.0.zip** - Portable package with installer
+          
+          ### 🔌 Supported Hardware:
+          - CANable with SLCAN firmware
+          - Vector CANcaseXL, VN series
+          - PEAK PCAN-USB, PCIe
+          - Kvaser Leaf, USBcan Pro
+          - Any SLCAN-compatible adapter
+          
+          ### 💻 System Requirements:
+          - Windows 10/11 (64-bit)
+          - USB-to-CAN adapter
+          - No additional software required
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libegl1-mesa libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install PySide6 python-can udsoncan can-isotp pyserial
+    
+    - name: Build Linux executable
+      run: |
+        pyinstaller --onefile --name CANAnalyzer-Linux \
+          --add-data "ui:ui" \
+          --hidden-import=PySide6.QtCore \
+          --hidden-import=PySide6.QtWidgets \
+          --hidden-import=PySide6.QtGui \
+          --hidden-import=can.interfaces.slcan \
+          --hidden-import=can.interfaces.socketcan \
+          --hidden-import=udsoncan \
+          --hidden-import=isotp \
+          --hidden-import=serial.tools.list_ports \
+          main.py
+    
+    - name: Upload Linux artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: CANAnalyzer-Linux
+        path: dist/CANAnalyzer-Linux
+        retention-days: 90
+    
+    - name: Add to Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/CANAnalyzer-Linux
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
