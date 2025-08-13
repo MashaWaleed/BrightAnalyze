@@ -230,6 +230,9 @@ class AdvancedLeftSidebar(QScrollArea):
         interface_widget_layout.setContentsMargins(0, 0, 0, 0)
         
         self.interface_combo = QComboBox()
+        self.interface_combo.setEditable(True)  # Allow manual entry
+        self.interface_combo.setToolTip("Select interface or type manually (e.g., COM10, COM6)")
+        
         self.refresh_interfaces_btn = QPushButton("🔄")
         self.refresh_interfaces_btn.setToolTip("Refresh available interfaces")
         self.refresh_interfaces_btn.setMaximumWidth(30)
@@ -429,24 +432,60 @@ class AdvancedLeftSidebar(QScrollArea):
         self.interface_combo.clear()
         interfaces = []
         
-        if driver == "auto-detect" or driver == "slcan":
-            # Detect SLCAN-compatible serial devices
+        # Determine which interfaces to show based on driver and platform
+        system = platform.system()
+        
+        if driver == "auto-detect":
+            # Auto-detect: show appropriate interfaces for current platform
+            if system == "Windows":
+                # On Windows, prioritize SLCAN devices
+                slcan_devices = self._detect_slcan_devices()
+                interfaces.extend(slcan_devices)
+                print(f"[DEBUG] Auto-detect on Windows: Found SLCAN devices: {slcan_devices}")
+            else:
+                # On Linux/macOS, show both SLCAN and SocketCAN
+                slcan_devices = self._detect_slcan_devices()
+                socketcan_devices = self._detect_socketcan_interfaces()
+                interfaces.extend(slcan_devices)
+                interfaces.extend(socketcan_devices)
+                print(f"[DEBUG] Auto-detect on {system}: Found SLCAN: {slcan_devices}, SocketCAN: {socketcan_devices}")
+                
+        elif driver == "slcan":
+            # SLCAN only: detect serial devices on all platforms
             slcan_devices = self._detect_slcan_devices()
             interfaces.extend(slcan_devices)
-            print(f"[DEBUG] Found SLCAN devices: {slcan_devices}")
-        
-        if driver == "auto-detect" or driver == "socketcan":
-            # Detect SocketCAN interfaces
-            socketcan_devices = self._detect_socketcan_interfaces()
-            interfaces.extend(socketcan_devices)
-            print(f"[DEBUG] Found SocketCAN devices: {socketcan_devices}")
+            print(f"[DEBUG] SLCAN driver: Found devices: {slcan_devices}")
+            
+        elif driver == "socketcan":
+            # SocketCAN only: only on Linux
+            if system == "Linux":
+                socketcan_devices = self._detect_socketcan_interfaces()
+                interfaces.extend(socketcan_devices)
+                print(f"[DEBUG] SocketCAN driver on Linux: Found devices: {socketcan_devices}")
+            else:
+                print(f"[DEBUG] SocketCAN driver not supported on {system}")
+                interfaces = []  # No interfaces available
+                
+        elif driver in ["vector", "pcan", "kvaser", "ixxat"]:
+            # Hardware drivers: use numeric channels
+            interfaces = [str(i) for i in range(0, 8)]
+            print(f"[DEBUG] Hardware driver {driver}: Using channels 0-7")
         
         # Add fallback options if no interfaces detected
         if not interfaces:
-            if driver == "slcan" or driver == "auto-detect":
-                interfaces.extend(["/dev/ttyACM0", "/dev/ttyUSB0", "COM3", "COM4"])
-            if driver == "socketcan" or driver == "auto-detect":
+            if driver == "slcan" or (driver == "auto-detect" and system == "Windows"):
+                # Fallback for SLCAN on any platform
+                if system == "Windows":
+                    interfaces.extend([f"COM{i}" for i in range(1, 21)])
+                    # Add helpful instruction at the top
+                    interfaces.insert(0, "--- Type manually if not listed ---")
+                else:
+                    interfaces.extend(["/dev/ttyACM0", "/dev/ttyUSB0"])
+                print(f"[DEBUG] Using SLCAN fallback interfaces for {system}")
+            elif driver == "socketcan" and system == "Linux":
+                # Fallback for SocketCAN on Linux only
                 interfaces.extend(["can0", "can1", "vcan0"])
+                print(f"[DEBUG] Using SocketCAN fallback interfaces")
         
         self.interface_combo.addItems(interfaces)
         
@@ -463,7 +502,8 @@ class AdvancedLeftSidebar(QScrollArea):
         self.interface_combo.currentTextChanged.connect(self._on_interface_changed)
         self.interface_combo.currentTextChanged.connect(self.interface_changed.emit)
         
-        print(f"[DEBUG] Populated {len(interfaces)} interfaces for driver {driver}")
+        print(f"[DEBUG] Populated {len(interfaces)} interfaces for driver {driver} on {system}")
+        print(f"[DEBUG] Available interfaces: {interfaces}")
     
     def _on_interface_changed(self, interface):
         """Handle interface selection change"""
@@ -531,12 +571,12 @@ class AdvancedLeftSidebar(QScrollArea):
                                 slcan_candidates.append(device)
                 
             elif system == "Windows":
-                # Windows COM ports - try pyserial for proper detection
+                # Windows COM ports - comprehensive detection including all available COM ports
                 try:
                     import serial.tools.list_ports
                     ports = serial.tools.list_ports.comports()
                     
-                    # Prioritize CAN-related devices
+                    # Prioritize CAN-related devices but include ALL available COM ports
                     can_devices = []
                     other_devices = []
                     
@@ -555,14 +595,16 @@ class AdvancedLeftSidebar(QScrollArea):
                         else:
                             other_devices.append(port.device)
                     
-                    # Add CAN devices first, then others
+                    # Add CAN devices first, then ALL other devices (don't limit)
                     slcan_candidates.extend(can_devices)
-                    slcan_candidates.extend(other_devices[:5])  # Limit to first 5 non-CAN devices
+                    slcan_candidates.extend(other_devices)
+                    
+                    print(f"[DEBUG] Windows COM detection: Found {len(can_devices)} CAN devices, {len(other_devices)} other devices")
                     
                 except ImportError:
                     print("[DEBUG] pyserial not available, using fallback COM port detection")
-                    # Fallback if pyserial not available
-                    slcan_candidates = [f"COM{i}" for i in range(1, 21)]
+                    # Comprehensive fallback - scan all COM ports 1-50
+                    slcan_candidates = [f"COM{i}" for i in range(1, 51)]
                     
             elif system == "Darwin":  # macOS
                 patterns = [
@@ -580,7 +622,7 @@ class AdvancedLeftSidebar(QScrollArea):
             if system == "Linux":
                 slcan_candidates = ["/dev/ttyACM0", "/dev/ttyUSB0"]
             elif system == "Windows":
-                slcan_candidates = ["COM3", "COM4", "COM5"]
+                slcan_candidates = [f"COM{i}" for i in range(1, 21)]
             else:
                 slcan_candidates = ["/dev/cu.usbmodem1", "/dev/cu.usbserial1"]
         
@@ -594,7 +636,12 @@ class AdvancedLeftSidebar(QScrollArea):
         return unique_candidates
     
     def _detect_socketcan_interfaces(self):
-        """Detect available SocketCAN interfaces"""
+        """Detect available SocketCAN interfaces (Linux only)"""
+        # Only detect SocketCAN interfaces on Linux
+        if platform.system() != "Linux":
+            print("[DEBUG] SocketCAN not supported on non-Linux systems")
+            return []
+            
         try:
             # Import the CAN manager to use its detection method
             interfaces = CANBusManager.list_socketcan_interfaces()
@@ -611,12 +658,13 @@ class AdvancedLeftSidebar(QScrollArea):
                     interface_name = os.path.basename(interface_path)
                     interfaces.append(interface_name)
                     
-                # If still nothing, add common defaults
+                # If still nothing, add common defaults only on Linux
                 if not interfaces:
                     interfaces = ["can0", "can1", "vcan0"]
                     
         except Exception as e:
             print(f"[WARNING] Error detecting SocketCAN interfaces: {e}")
+            # Only provide defaults on Linux
             interfaces = ["can0", "can1", "vcan0"]
             
         return interfaces

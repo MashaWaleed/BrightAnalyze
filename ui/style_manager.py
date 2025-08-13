@@ -28,13 +28,25 @@ class ModernStyleManager(QObject):
         self.theme_changed.emit(theme)
         
     def apply_light_theme(self, widget):
-        """Apply light theme styling"""
+        """Apply light theme styling with Windows compatibility"""
         style = """
-        /* Main Application Styling */
+        /* Main Application Styling - Windows Compatible */
         QMainWindow {
             background-color: #ffffff;
+            color: #000000;
+            font-family: "Segoe UI", "Tahoma", "Arial", sans-serif;
+            font-size: 9pt;
+        }
+        
+        /* Ensure all widgets have proper text color */
+        QWidget {
+            color: #000000;
+            background-color: #ffffff;
+        }
+        
+        QLabel {
             color: #2c3e50;
-            font-family: "Segoe UI", "Arial", sans-serif;
+            background-color: transparent;
         }
         
         /* Menu Bar Styling */
@@ -43,12 +55,14 @@ class ModernStyleManager(QObject):
                 stop: 0 #ffffff, stop: 1 #f8f9fa);
             border-bottom: 1px solid #e9ecef;
             padding: 4px;
+            color: #000000;
         }
         
         QMenuBar::item {
             background: transparent;
             padding: 6px 12px;
             border-radius: 4px;
+            color: #000000;
         }
         
         QMenuBar::item:selected {
@@ -61,11 +75,13 @@ class ModernStyleManager(QObject):
             border: 1px solid #e0e0e0;
             border-radius: 6px;
             padding: 4px;
+            color: #000000;
         }
         
         QMenu::item {
             padding: 8px 24px;
             border-radius: 4px;
+            color: #000000;
         }
         
         QMenu::item:selected {
@@ -88,6 +104,7 @@ class ModernStyleManager(QObject):
             padding: 8px 16px;
             font-weight: 500;
             min-height: 20px;
+            color: #000000;
         }
         
         QPushButton:hover {
@@ -118,10 +135,13 @@ class ModernStyleManager(QObject):
         /* Input Controls */
         QLineEdit {
             background-color: white;
-            border: 1px solid #ced4da;
+            border: 2px solid #ced4da;
             border-radius: 4px;
             padding: 8px 12px;
-            font-size: 14px;
+            font-size: 9pt;
+            color: #000000;
+            selection-background-color: #007bff;
+            selection-color: white;
         }
         
         QLineEdit:focus {
@@ -137,10 +157,11 @@ class ModernStyleManager(QObject):
         
         QComboBox {
             background-color: white;
-            border: 1px solid #ced4da;
+            border: 2px solid #ced4da;
             border-radius: 4px;
             padding: 6px 12px;
             min-width: 100px;
+            color: #000000;
         }
         
         QComboBox:hover {
@@ -151,9 +172,18 @@ class ModernStyleManager(QObject):
             border-color: #007bff;
         }
         
+        QComboBox QAbstractItemView {
+            background-color: white;
+            color: #000000;
+            border: 1px solid #ced4da;
+            selection-background-color: #007bff;
+            selection-color: white;
+        }
+        
         QComboBox::drop-down {
             border: none;
             width: 20px;
+            background-color: transparent;
         }
         
         QComboBox::down-arrow {
@@ -165,10 +195,11 @@ class ModernStyleManager(QObject):
         
         QSpinBox {
             background-color: white;
-            border: 1px solid #ced4da;
+            border: 2px solid #ced4da;
             border-radius: 4px;
             padding: 6px;
             min-width: 60px;
+            color: #000000;
         }
         
         QSpinBox:focus {
@@ -182,11 +213,13 @@ class ModernStyleManager(QObject):
             alternate-background-color: #f8f9fa;
             border: 1px solid #dee2e6;
             border-radius: 6px;
+            color: #000000;
         }
         
         QTableWidget::item {
             padding: 8px;
             border: none;
+            color: #000000;
         }
         
         QTableWidget::item:selected {
@@ -223,6 +256,7 @@ class ModernStyleManager(QObject):
             border-top-left-radius: 6px;
             border-top-right-radius: 6px;
             font-weight: 500;
+            color: #000000;
         }
         
         QTabBar::tab:selected {
@@ -244,6 +278,7 @@ class ModernStyleManager(QObject):
             margin: 12px 0;
             padding-top: 16px;
             background-color: #fafafa;
+            color: #495057;
         }
         
         QGroupBox::title {
@@ -306,6 +341,7 @@ class ModernStyleManager(QObject):
         /* Checkbox and Radio Button */
         QCheckBox {
             spacing: 8px;
+            color: #000000;
         }
         
         QCheckBox::indicator {
@@ -326,6 +362,10 @@ class ModernStyleManager(QObject):
             content: "✓";
             color: white;
             font-weight: bold;
+        }
+        
+        QRadioButton {
+            color: #000000;
         }
         
         QRadioButton::indicator {
@@ -367,11 +407,44 @@ class ModernStyleManager(QObject):
             border-radius: 4px;
             text-align: center;
             background-color: #f8f9fa;
+            color: #000000;
         }
         
         QProgressBar::chunk {
             background-color: #28a745;
             border-radius: 3px;
+        }
+        
+        /* Text areas */
+        QTextEdit {
+            background-color: white;
+            border: 2px solid #ced4da;
+            border-radius: 4px;
+            color: #000000;
+            selection-background-color: #007bff;
+            selection-color: white;
+        }
+        
+        QTextEdit:focus {
+            border-color: #007bff;
+        }
+        
+        /* List widgets */
+        QListWidget {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            color: #000000;
+        }
+        
+        QListWidget::item {
+            padding: 4px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        QListWidget::item:selected {
+            background-color: #007bff;
+            color: white;
         }
         """
         

@@ -249,9 +249,36 @@ class CANAnalyzerMainWindow(QMainWindow):
         self.apply_theme(new_theme)
         
     def apply_theme(self, theme):
-        """Apply the selected theme"""
+        """Apply the selected theme with Windows compatibility"""
+        import platform
         self.current_theme = theme
+        
+        # Apply base theme
         self.style_manager.apply_theme(self, theme)
+        
+        # Apply Windows-specific enhancements if needed
+        if platform.system() == "Windows":
+            # Force font for better Windows visibility
+            app_font = QFont("Segoe UI", 9)
+            QApplication.instance().setFont(app_font)
+            
+            # Additional Windows-specific styling if needed
+            if theme == "light":
+                # Ensure maximum contrast on Windows
+                additional_style = """
+                QWidget {
+                    color: #000000;
+                }
+                QLabel {
+                    color: #000000;
+                }
+                QGroupBox {
+                    color: #000000;
+                }
+                """
+                current_style = self.styleSheet()
+                self.setStyleSheet(current_style + additional_style)
+        
         self.theme_changed.emit(theme)
         self.settings.setValue("theme", theme)
         
@@ -593,6 +620,19 @@ class CANAnalyzerMainWindow(QMainWindow):
 
 def main():
     """Main application entry point"""
+    import platform
+    
+    # Enable high DPI support on Windows
+    if platform.system() == "Windows":
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+        # Set DPI awareness for Windows
+        try:
+            import ctypes
+            ctypes.windll.shcore.SetProcessDpiAwareness(1)  # PROCESS_PER_MONITOR_DPI_AWARE
+        except:
+            pass  # Ignore if not available
+    
     app = QApplication(sys.argv)
     
     # Set application properties
@@ -601,9 +641,13 @@ def main():
     app.setOrganizationName("Professional Automotive Tools")
     app.setOrganizationDomain("cananalyzer.pro")
     
-    # Set application font
-    font = QFont("Segoe UI", 9)
-    app.setFont(font)
+    # Set Windows-optimized font
+    if platform.system() == "Windows":
+        font = QFont("Segoe UI", 9)
+        app.setFont(font)
+    else:
+        font = QFont("Segoe UI", 9)
+        app.setFont(font)
     
     # Create and show main window
     window = CANAnalyzerMainWindow()
