@@ -24,11 +24,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
-        pip install PySide6 python-can udsoncan can-isotp pyserial
+        pip install PySide6 python-can udsoncan can-isotp pyserial cantools
     
     - name: Build Windows executable
       run: |
-        pyinstaller --onefile --windowed --name CANAnalyzer --add-data "ui;ui" --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtGui --hidden-import=can.interfaces.slcan --hidden-import=can.interfaces.socketcan --hidden-import=can.interfaces.vector --hidden-import=can.interfaces.pcan --hidden-import=can.interfaces.kvaser --hidden-import=udsoncan --hidden-import=isotp --hidden-import=serial --hidden-import=serial.tools.list_ports --hidden-import=subprocess --hidden-import=threading --hidden-import=queue --hidden-import=platform main.py
+        pyinstaller --onefile --windowed --name CANAnalyzer --add-data "ui;ui" --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtGui --hidden-import=can.interfaces.slcan --hidden-import=can.interfaces.socketcan --hidden-import=can.interfaces.vector --hidden-import=can.interfaces.pcan --hidden-import=can.interfaces.kvaser --hidden-import=udsoncan --hidden-import=udsoncan.client --hidden-import=udsoncan.connections --hidden-import=udsoncan.services --hidden-import=isotp --hidden-import=serial --hidden-import=serial.tools.list_ports --hidden-import=cantools --hidden-import=cantools.database --hidden-import=cantools.database.can --hidden-import=cantools.database.can.database --hidden-import=subprocess --hidden-import=threading --hidden-import=queue --hidden-import=platform --hidden-import=time --hidden-import=traceback --hidden-import=copy --hidden-import=dataclasses --hidden-import=typing --hidden-import=pathlib --hidden-import=json --hidden-import=os --hidden-import=sys --hidden-import=re --hidden-import=glob --hidden-import=datetime --hidden-import=collections --hidden-import=random --hidden-import=io main.py
     
     - name: Create portable package
       run: |
@@ -61,14 +61,14 @@ jobs:
         "@
         $readme | Out-File -FilePath "CANAnalyzer-Windows-Portable\README.txt" -Encoding UTF8
         
-        Compress-Archive -Path "CANAnalyzer-Windows-Portable" -DestinationPath "CANAnalyzer-Windows-v1.0.zip"
+        Compress-Archive -Path "CANAnalyzer-Windows-Portable" -DestinationPath "CANAnalyzer-Windows-v1.1.zip"
     
     - name: Upload Windows artifacts
       uses: actions/upload-artifact@v4
       with:
         name: CANAnalyzer-Windows
         path: |
-          CANAnalyzer-Windows-v1.0.zip
+          CANAnalyzer-Windows-v1.1.zip
           dist/CANAnalyzer.exe
         retention-days: 90
     
@@ -77,7 +77,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          CANAnalyzer-Windows-v1.0.zip
+          CANAnalyzer-Windows-v1.1.zip
           dist/CANAnalyzer.exe
         name: CAN Analyzer ${{ github.ref_name }}
         body: |
@@ -93,7 +93,7 @@ jobs:
           
           ### 📦 Downloads:
           - **CANAnalyzer.exe** - Single executable (run directly)
-          - **CANAnalyzer-Windows-v1.0.zip** - Portable package with installer
+          - **CANAnalyzer-Windows-v1.1.zip** - Portable package with installer
           
           ### 🔌 Supported Hardware:
           - CANable with SLCAN firmware
@@ -132,7 +132,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
-        pip install PySide6 python-can udsoncan can-isotp pyserial
+        pip install PySide6 python-can udsoncan can-isotp pyserial cantools
     
     - name: Build Linux executable
       run: |
@@ -144,8 +144,14 @@ jobs:
           --hidden-import=can.interfaces.slcan \
           --hidden-import=can.interfaces.socketcan \
           --hidden-import=udsoncan \
+          --hidden-import=udsoncan.client \
+          --hidden-import=udsoncan.connections \
+          --hidden-import=udsoncan.services \
           --hidden-import=isotp \
           --hidden-import=serial.tools.list_ports \
+          --hidden-import=cantools \
+          --hidden-import=cantools.database \
+          --hidden-import=cantools.database.can \
           main.py
     
     - name: Upload Linux artifact

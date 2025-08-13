@@ -3,3 +3,4 @@ python-can>=4.0.0
 udsoncan>=1.20.0
 can-isotp>=2.0.0
 pyserial>=3.5
+cantools>=39.0.0
