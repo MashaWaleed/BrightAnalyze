@@ -41,7 +41,18 @@ class CANAnalyzerMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Professional CAN Bus Analyzer v2.0")
-        self.setGeometry(100, 100, 1600, 1000)
+        
+        # Set safe default window size
+        from PySide6.QtGui import QGuiApplication
+        screen = QGuiApplication.primaryScreen()
+        if screen:
+            screen_geometry = screen.availableGeometry()
+            # Use 80% of screen width/height, but with reasonable limits
+            default_width = min(max(1200, int(screen_geometry.width() * 0.8)), 1600)
+            default_height = min(max(800, int(screen_geometry.height() * 0.8)), 1000)
+            self.setGeometry(100, 100, default_width, default_height)
+        else:
+            self.setGeometry(100, 100, 1400, 900)  # Safe fallback
         
         # Application state
         self.settings = QSettings("CANAnalyzer", "Professional")
@@ -393,14 +404,46 @@ class CANAnalyzerMainWindow(QMainWindow):
         self.settings.setValue("windowState", self.saveState())
         
     def restore_settings(self):
-        """Restore application settings"""
+        """Restore application settings with safe window geometry"""
+        # Safe geometry restoration
         geometry = self.settings.value("geometry")
         if geometry:
-            self.restoreGeometry(geometry)
-            
+            try:
+                # Get screen geometry to ensure window fits
+                from PySide6.QtGui import QGuiApplication
+                screen = QGuiApplication.primaryScreen()
+                if screen:
+                    screen_geometry = screen.availableGeometry()
+                    
+                    # Restore geometry only if it fits on screen
+                    self.restoreGeometry(geometry)
+                    
+                    # Check if window is now outside screen bounds
+                    window_geometry = self.frameGeometry()
+                    if not screen_geometry.contains(window_geometry):
+                        print("[DEBUG] Saved window geometry doesn't fit screen, using safe defaults")
+                        # Use safe default size and center on screen
+                        safe_width = min(1400, screen_geometry.width() - 100)
+                        safe_height = min(900, screen_geometry.height() - 100)
+                        self.resize(safe_width, safe_height)
+                        
+                        # Center on screen
+                        x = (screen_geometry.width() - safe_width) // 2
+                        y = (screen_geometry.height() - safe_height) // 2
+                        self.move(x + screen_geometry.x(), y + screen_geometry.y())
+                else:
+                    self.restoreGeometry(geometry)
+            except Exception as e:
+                print(f"[DEBUG] Error restoring geometry: {e}, using defaults")
+                self.setGeometry(100, 100, 1400, 900)
+        
+        # Restore window state
         window_state = self.settings.value("windowState")
         if window_state:
-            self.restoreState(window_state)
+            try:
+                self.restoreState(window_state)
+            except Exception as e:
+                print(f"[DEBUG] Error restoring window state: {e}")
             
     def closeEvent(self, event):
         """Handle application close"""
@@ -622,10 +665,19 @@ def main():
     """Main application entry point"""
     import platform
     
-    # Enable high DPI support on Windows
+    # Enable high DPI support on Windows (use newer attributes)
     if platform.system() == "Windows":
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+        try:
+            # Use newer Qt6 attributes that aren't deprecated
+            QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+        except AttributeError:
+            # Fallback for older Qt versions
+            try:
+                QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+                QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+            except AttributeError:
+                pass
+        
         # Set DPI awareness for Windows
         try:
             import ctypes

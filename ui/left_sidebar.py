@@ -524,7 +524,9 @@ class AdvancedLeftSidebar(QScrollArea):
                 if usb_info.get('product'):
                     info_text += f"Product: {usb_info['product']}\n"
                 if usb_info.get('serial'):
-                    info_text += f"Serial: {usb_info['serial']}"
+                    info_text += f"Serial: {usb_info['serial']}\n"
+                if usb_info.get('vid') and usb_info.get('pid'):
+                    info_text += f"VID/PID: 0x{usb_info['vid']:04X}/0x{usb_info['pid']:04X}"
             else:
                 info_text = f"Serial device: {interface}"
         elif interface.startswith(("can", "vcan")):
@@ -571,7 +573,7 @@ class AdvancedLeftSidebar(QScrollArea):
                                 slcan_candidates.append(device)
                 
             elif system == "Windows":
-                # Windows COM ports - comprehensive detection including all available COM ports
+                # Windows COM ports - enhanced detection for CANable and other CAN devices
                 try:
                     import serial.tools.list_ports
                     ports = serial.tools.list_ports.comports()
@@ -581,17 +583,36 @@ class AdvancedLeftSidebar(QScrollArea):
                     other_devices = []
                     
                     for port in ports:
-                        description = port.description.lower()
-                        manufacturer = getattr(port, 'manufacturer', '').lower()
-                        product = getattr(port, 'product', '').lower()
+                        description = (port.description or '').lower()
+                        manufacturer = (getattr(port, 'manufacturer', '') or '').lower()
+                        product = (getattr(port, 'product', '') or '').lower()
+                        vid = getattr(port, 'vid', None)
+                        pid = getattr(port, 'pid', None)
+                        hwid = (getattr(port, 'hwid', '') or '').upper()
                         
-                        # Check for CAN-related keywords
+                        # Check for CAN-related keywords in descriptions
                         can_keywords = ['can', 'canable', 'cantact', 'usb2can', 'slcan', 'peak', 'kvaser']
-                        is_can_device = any(keyword in description or keyword in manufacturer or keyword in product 
-                                          for keyword in can_keywords)
+                        has_can_keyword = any(keyword in description or keyword in manufacturer or keyword in product 
+                                            for keyword in can_keywords)
                         
-                        if is_can_device:
+                        # Check for known CAN device VID/PID combinations
+                        known_can_devices = [
+                            (0x16D0, 0x117E),  # CANable (gs_usb mode)
+                            (0x16D0, 0x0B3B),  # CANable (SLCAN mode)
+                            (0x1D50, 0x606F),  # CANtact
+                            (0x0483, 0x1234),  # Some STM32-based CAN adapters
+                            (0x1209, 0x0001),  # LAWICEL CANUSB
+                        ]
+                        
+                        is_known_can_device = (vid, pid) in known_can_devices
+                        
+                        # Also check hardware ID for CANable VID/PID
+                        is_canable_hwid = 'VID_16D0&PID_117E' in hwid or 'VID_16D0&PID_0B3B' in hwid
+                        
+                        # Classify as CAN device if any criteria match
+                        if has_can_keyword or is_known_can_device or is_canable_hwid:
                             can_devices.append(port.device)
+                            print(f"[DEBUG] Identified CAN device: {port.device} - {description} (VID:0x{vid:04X}, PID:0x{pid:04X})" if vid and pid else f"[DEBUG] Identified CAN device: {port.device} - {description}")
                         else:
                             other_devices.append(port.device)
                     
@@ -707,17 +728,39 @@ class AdvancedLeftSidebar(QScrollArea):
                     pass
                     
             elif system == "Windows":
-                # Use serial.tools.list_ports for Windows
+                # Use serial.tools.list_ports for Windows with enhanced CANable detection
                 try:
                     import serial.tools.list_ports
                     ports = serial.tools.list_ports.comports()
                     for port in ports:
                         if port.device == device_path:
+                            vid = getattr(port, 'vid', None)
+                            pid = getattr(port, 'pid', None)
+                            hwid = (getattr(port, 'hwid', '') or '')
+                            
+                            # Enhanced description for known CAN devices
+                            description = port.description or "USB Serial Device"
+                            if vid and pid:
+                                # Check for known CAN device VID/PID combinations
+                                if (vid, pid) == (0x16D0, 0x117E):
+                                    description = "CANable gs_usb (CAN Interface)"
+                                elif (vid, pid) == (0x16D0, 0x0B3B):
+                                    description = "CANable SLCAN (CAN Interface)"
+                                elif (vid, pid) == (0x1D50, 0x606F):
+                                    description = "CANtact (CAN Interface)"
+                                elif 'VID_16D0&PID_117E' in hwid.upper():
+                                    description = "CANable gs_usb (CAN Interface)"
+                                elif 'VID_16D0&PID_0B3B' in hwid.upper():
+                                    description = "CANable SLCAN (CAN Interface)"
+                            
                             return {
-                                'description': port.description,
+                                'description': description,
                                 'vendor': getattr(port, 'manufacturer', None),
                                 'product': getattr(port, 'product', None),
-                                'serial': getattr(port, 'serial_number', None)
+                                'serial': getattr(port, 'serial_number', None),
+                                'vid': vid,
+                                'pid': pid,
+                                'hwid': hwid
                             }
                 except ImportError:
                     pass

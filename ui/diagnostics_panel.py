@@ -1111,7 +1111,9 @@ Status Breakdown:
     
     def log_response(self, message):
         """Log response message"""
-        timestamp = time.strftime("%H:%M:%S.%f")[:-3]  # Include milliseconds
+        import datetime
+        now = datetime.datetime.now()
+        timestamp = now.strftime("%H:%M:%S") + f".{now.microsecond // 1000:03d}"  # Include milliseconds
         formatted_message = f"[{timestamp}] {message}"
         
         self.response_text.append(formatted_message)
