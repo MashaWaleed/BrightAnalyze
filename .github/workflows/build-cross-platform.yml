@@ -40,17 +40,21 @@ jobs:
     
     - name: Build Windows executable
       run: |
-        pyinstaller CANAnalyzer-Linux.spec --distpath dist-windows --workpath build-windows
+        pyinstaller CANAnalyzer-Windows.spec
         
     - name: Rename Windows executable
       run: |
-        Move-Item "dist-windows\CANAnalyzer-Linux\CANAnalyzer-Linux.exe" "dist-windows\CANAnalyzer-Windows.exe" -ErrorAction SilentlyContinue
-        if (Test-Path "dist-windows\CANAnalyzer-Linux") { Remove-Item "dist-windows\CANAnalyzer-Linux" -Recurse -Force }
+        if (Test-Path "dist\CANAnalyzer-Windows.exe") {
+          Write-Host "Windows executable built successfully"
+        } else {
+          Write-Error "Windows executable not found!"
+          exit 1
+        }
     
     - name: Create Windows package
       run: |
         New-Item -ItemType Directory -Name "CANAnalyzer-Windows-Portable" -Force
-        Copy-Item "dist-windows\CANAnalyzer-Windows.exe" "CANAnalyzer-Windows-Portable\" -ErrorAction SilentlyContinue
+        Copy-Item "dist\CANAnalyzer-Windows.exe" "CANAnalyzer-Windows-Portable\" -ErrorAction Stop
         
         $readme = @"
         # CAN Analyzer for Windows
@@ -89,7 +93,7 @@ jobs:
         name: CANAnalyzer-Windows
         path: |
           CANAnalyzer-Windows-v${{ env.APP_VERSION }}.zip
-          dist-windows/CANAnalyzer-Windows.exe
+          dist/CANAnalyzer-Windows.exe
         retention-days: 90
 
   build-linux:
@@ -108,9 +112,10 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          libegl1-mesa libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
+          libegl1 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
           libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
-          libfontconfig1 libxcb-shape0 libxcb-cursor0
+          libfontconfig1 libxcb-shape0 libxcb-cursor0 libgl1-mesa-glx \
+          libglib2.0-0 libxcb-xfixes0
     
     - name: Install Python dependencies
       run: |

@@ -14,7 +14,8 @@ venv/
 # Build artifacts
 build/
 dist/
-*.spec
+# Keep PyInstaller spec files
+!*.spec
 
 # IDE and editors
 .DS_Store
