@@ -1,4 +1,5 @@
 
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -7,10 +8,49 @@ __pycache__/
 env/
 venv/
 .venv/
+*.egg-info/
+.pytest_cache/
+
+# Build artifacts
 build/
 dist/
 *.spec
+
+# IDE and editors
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Application specific
+workspaces/
+logs/
+*.log
+
+# Screenshots and media (exclude from repository)
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.avi
+
+# Configuration files with sensitive data
+config.json
+*.key
+*.pem
+*.p12
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

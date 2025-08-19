@@ -8,7 +8,8 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
                                QGroupBox, QFormLayout, QLabel, QLineEdit,
                                QPushButton, QComboBox, QTextEdit, QTableWidget,
                                QTableWidgetItem, QCheckBox, QSpinBox, QProgressBar,
-                               QSplitter, QTreeWidget, QTreeWidgetItem, QMessageBox)
+                               QSplitter, QTreeWidget, QTreeWidgetItem, QMessageBox,
+                               QApplication, QFileDialog)
 from PySide6.QtCore import Signal, Qt, QTimer
 from PySide6.QtGui import QFont, QColor
 
@@ -329,55 +330,195 @@ class DiagnosticsPanel(QWidget):
         self.tab_widget.addTab(data_widget, "🆔 Data by ID")
         
     def setup_security_tab(self):
-        """Setup security access tab"""
+        """Setup enhanced security access tab with DLL support"""
         security_widget = QWidget()
         layout = QVBoxLayout(security_widget)
         layout.setSpacing(8)
         
-        # Security level
-        level_group = QGroupBox("🔐 Security Access")
+        # Import the DLL interface
+        try:
+            from security_dll_interface import SecurityDLLInterface
+            self.dll_interface = SecurityDLLInterface()
+        except ImportError:
+            self.dll_interface = None
+            print("⚠️  Security DLL interface not available")
+        
+        # ECU Configuration Section
+        ecu_group = QGroupBox("🚗 ECU Configuration")
+        ecu_layout = QFormLayout(ecu_group)
+        
+        # ECU Selection
+        self.ecu_combo = QComboBox()
+        self.ecu_combo.setEditable(True)
+        self.ecu_combo.addItems([
+            "Engine_ECU_0x7E0",
+            "Transmission_ECU_0x7E1", 
+            "Body_ECU_0x7E2",
+            "Gateway_ECU_0x7E3",
+            "Custom_ECU"
+        ])
+        self.ecu_combo.currentTextChanged.connect(self.on_ecu_changed)
+        ecu_layout.addRow("ECU Name:", self.ecu_combo)
+        
+        # Algorithm Provider Selection
+        provider_layout = QHBoxLayout()
+        self.algorithm_provider_combo = QComboBox()
+        self.algorithm_provider_combo.addItems([
+            "🤖 Built-in Algorithms",
+            "📚 DLL (if loaded)",
+            "🔄 Auto (DLL first, fallback)"
+        ])
+        self.algorithm_provider_combo.currentTextChanged.connect(self.on_provider_changed)
+        
+        self.provider_status_label = QLabel("✅ Ready")
+        self.provider_status_label.setStyleSheet("color: green; font-weight: bold;")
+        
+        provider_layout.addWidget(self.algorithm_provider_combo)
+        provider_layout.addWidget(self.provider_status_label)
+        ecu_layout.addRow("Algorithm Provider:", provider_layout)
+        
+        layout.addWidget(ecu_group)
+        
+        # DLL Management Section
+        if self.dll_interface:
+            dll_group = QGroupBox("📚 DLL Management")
+            dll_layout = QVBoxLayout(dll_group)
+            
+            # DLL Loading
+            dll_load_layout = QHBoxLayout()
+            self.dll_path_edit = QLineEdit()
+            self.dll_path_edit.setPlaceholderText("Select security access DLL...")
+            
+            browse_dll_btn = QPushButton("📁 Browse")
+            browse_dll_btn.clicked.connect(self.browse_dll_file)
+            
+            load_dll_btn = QPushButton("⬇️ Load DLL")
+            load_dll_btn.clicked.connect(self.load_dll)
+            
+            dll_load_layout.addWidget(self.dll_path_edit)
+            dll_load_layout.addWidget(browse_dll_btn)
+            dll_load_layout.addWidget(load_dll_btn)
+            dll_layout.addLayout(dll_load_layout)
+            
+            # DLL Status
+            self.dll_status_label = QLabel("📚 No DLL loaded")
+            self.dll_status_label.setStyleSheet("color: #666; font-style: italic;")
+            dll_layout.addWidget(self.dll_status_label)
+            
+            # DLL Configuration Buttons
+            dll_config_layout = QHBoxLayout()
+            
+            save_config_btn = QPushButton("💾 Save Config")
+            save_config_btn.clicked.connect(self.save_dll_config)
+            
+            load_config_btn = QPushButton("📂 Load Config")
+            load_config_btn.clicked.connect(self.load_dll_config)
+            
+            test_dll_btn = QPushButton("🧪 Test DLL")
+            test_dll_btn.clicked.connect(self.test_dll)
+            
+            dll_config_layout.addWidget(save_config_btn)
+            dll_config_layout.addWidget(load_config_btn)
+            dll_config_layout.addWidget(test_dll_btn)
+            dll_config_layout.addStretch()
+            dll_layout.addLayout(dll_config_layout)
+            
+            layout.addWidget(dll_group)
+        
+        # Security Operations (Enhanced)
+        level_group = QGroupBox("🔐 Security Access Operations")
         level_layout = QFormLayout(level_group)
         
+        # Enhanced Security Level Selection
         self.security_level_combo = QComboBox()
         self.security_level_combo.addItems(SECURITY_LEVELS)
+        self.security_level_combo.currentTextChanged.connect(self.on_security_level_changed)
         level_layout.addRow("Security Level:", self.security_level_combo)
         
+        # Level Description
+        self.level_description_label = QLabel("Service mode access")
+        self.level_description_label.setStyleSheet("color: #666; font-style: italic;")
+        level_layout.addRow("Description:", self.level_description_label)
+        
+        # Seed Display (Enhanced)
+        seed_layout = QHBoxLayout()
         self.seed_edit = QLineEdit()
         self.seed_edit.setPlaceholderText("Seed value (will be received)")
         self.seed_edit.setReadOnly(True)
-        level_layout.addRow("Seed:", self.seed_edit)
         
+        self.seed_copy_btn = QPushButton("📋")
+        self.seed_copy_btn.setMaximumWidth(30)
+        self.seed_copy_btn.setToolTip("Copy seed to clipboard")
+        self.seed_copy_btn.clicked.connect(self.copy_seed)
+        
+        seed_layout.addWidget(self.seed_edit)
+        seed_layout.addWidget(self.seed_copy_btn)
+        level_layout.addRow("Received Seed:", seed_layout)
+        
+        # Key Input/Display (Enhanced)
+        key_layout = QHBoxLayout()
         self.key_edit = QLineEdit()
-        self.key_edit.setPlaceholderText("Enter calculated key")
-        level_layout.addRow("Key:", self.key_edit)
+        self.key_edit.setPlaceholderText("Key will be calculated or enter manually")
         
+        self.key_copy_btn = QPushButton("📋")
+        self.key_copy_btn.setMaximumWidth(30)
+        self.key_copy_btn.setToolTip("Copy key to clipboard")
+        self.key_copy_btn.clicked.connect(self.copy_key)
+        
+        self.manual_key_checkbox = QCheckBox("Manual")
+        self.manual_key_checkbox.toggled.connect(self.on_manual_key_toggled)
+        
+        key_layout.addWidget(self.key_edit)
+        key_layout.addWidget(self.key_copy_btn)
+        key_layout.addWidget(self.manual_key_checkbox)
+        level_layout.addRow("Security Key:", key_layout)
+        
+        # Enhanced Operation Buttons
         security_buttons = QHBoxLayout()
         self.request_seed_btn = QPushButton("🌱 Request Seed")
         self.request_seed_btn.clicked.connect(self.request_security_seed)
+        
+        self.calculate_key_btn = QPushButton("🧮 Calculate Key")
+        self.calculate_key_btn.clicked.connect(self.calculate_security_key)
+        self.calculate_key_btn.setEnabled(False)
         
         self.send_key_btn = QPushButton("🔑 Send Key")
         self.send_key_btn.clicked.connect(self.send_security_key)
         self.send_key_btn.setEnabled(False)
         
-        security_buttons.addWidget(self.request_seed_btn)
-        security_buttons.addWidget(self.send_key_btn)
-        level_layout.addRow(security_buttons)
+        # Additional buttons
+        self.clear_security_btn = QPushButton("🗑️ Clear")
+        self.clear_security_btn.clicked.connect(self.clear_security_data)
         
-        # Security status
+        security_buttons.addWidget(self.request_seed_btn)
+        security_buttons.addWidget(self.calculate_key_btn)
+        security_buttons.addWidget(self.send_key_btn)
+        security_buttons.addWidget(self.clear_security_btn)
+        level_layout.addRow("Operations:", security_buttons)
+        
+        # Enhanced Security Status
+        status_layout = QHBoxLayout()
         self.security_status_label = QLabel("🔒 Security Locked")
         self.security_status_label.setStyleSheet("color: red; font-weight: bold;")
-        level_layout.addRow("Status:", self.security_status_label)
+        
+        self.current_level_label = QLabel("Level: None")
+        self.current_level_label.setStyleSheet("color: #666;")
+        
+        status_layout.addWidget(self.security_status_label)
+        status_layout.addStretch()
+        status_layout.addWidget(self.current_level_label)
+        level_layout.addRow("Status:", status_layout)
         
         layout.addWidget(level_group)
         
-        # Key calculation help
-        calc_group = QGroupBox("🧮 Key Calculation")
+        # Enhanced Key Calculation Help
+        calc_group = QGroupBox("🧮 Key Calculation Methods")
         calc_layout = QVBoxLayout(calc_group)
         
         calc_info = QTextEdit()
         calc_info.setMaximumHeight(120)
         calc_info.setReadOnly(True)
-        calc_info.setHtml(KEY_CALC_HELP_TEXT)
+        calc_info.setHtml(self._get_enhanced_help_text())
         calc_layout.addWidget(calc_info)
         
         calc_buttons = QHBoxLayout()
@@ -390,16 +531,48 @@ class DiagnosticsPanel(QWidget):
         self.auto_calc_comp_btn = QPushButton("🤖 Auto Complement")
         self.auto_calc_comp_btn.clicked.connect(lambda: self.auto_calculate_key("complement"))
         
+        # Advanced algorithm buttons
+        self.auto_calc_crc_btn = QPushButton("🤖 CRC16")
+        self.auto_calc_crc_btn.clicked.connect(lambda: self.auto_calculate_key("crc16"))
+        
         calc_buttons.addWidget(self.auto_calc_btn)
         calc_buttons.addWidget(self.auto_calc_add_btn)
         calc_buttons.addWidget(self.auto_calc_comp_btn)
+        calc_buttons.addWidget(self.auto_calc_crc_btn)
         calc_buttons.addStretch()
         calc_layout.addLayout(calc_buttons)
         
         layout.addWidget(calc_group)
+        
+        # Security Session Integration
+        session_group = QGroupBox("🔗 Session Integration")
+        session_layout = QFormLayout(session_group)
+        
+        self.auto_session_checkbox = QCheckBox("Auto change to required session")
+        self.auto_session_checkbox.setChecked(True)
+        session_layout.addRow("Session Control:", self.auto_session_checkbox)
+        
+        self.required_session_combo = QComboBox()
+        self.required_session_combo.addItems([
+            "0x01 - Default Session",
+            "0x02 - Programming Session",
+            "0x03 - Extended Session"
+        ])
+        self.required_session_combo.setCurrentText("0x02 - Programming Session")
+        session_layout.addRow("Required Session:", self.required_session_combo)
+        
+        layout.addWidget(session_group)
+        
         layout.addStretch()
         
         self.tab_widget.addTab(security_widget, "🔐 Security")
+        
+        # Connect DLL interface signals if available
+        if self.dll_interface:
+            self.dll_interface.dll_loaded.connect(self.on_dll_loaded)
+            self.dll_interface.dll_unloaded.connect(self.on_dll_unloaded)
+            self.dll_interface.dll_error.connect(self.on_dll_error)
+            self.dll_interface.key_calculated.connect(self.on_dll_key_calculated)
         
     def setup_obd_tab(self):
         """Setup OBD-II tab"""
@@ -1197,3 +1370,300 @@ Status Breakdown:
         self.obd_data_table.setRowCount(0)
         self.response_text.clear()
         self.dtc_count_label.setText("DTCs: 0")
+    
+    # Enhanced Security Access Methods
+    def _calculate_crc16_key(self, seed_bytes):
+        """Calculate CRC16-based key"""
+        # CRC16-CCITT polynomial
+        crc = 0xFFFF
+        for byte in seed_bytes:
+            crc ^= byte << 8
+            for _ in range(8):
+                if crc & 0x8000:
+                    crc = (crc << 1) ^ 0x1021
+                else:
+                    crc <<= 1
+                crc &= 0xFFFF
+        
+        # Return CRC as 2-byte key
+        return bytes([(crc >> 8) & 0xFF, crc & 0xFF])
+    
+    def on_ecu_changed(self, ecu_name):
+        """Handle ECU selection change"""
+        self.add_log_entry(f"🚗 Selected ECU: {ecu_name}")
+        # Clear previous security data when changing ECU
+        self.clear_security_data()
+    
+    def on_provider_changed(self, provider):
+        """Handle algorithm provider change"""
+        if hasattr(self, 'provider_status_label'):
+            if "DLL" in provider and not (hasattr(self, 'dll_interface') and self.dll_interface and self.dll_interface.is_dll_loaded()):
+                self.provider_status_label.setText("❌ No DLL loaded")
+                self.provider_status_label.setStyleSheet("color: red; font-weight: bold;")
+            else:
+                self.provider_status_label.setText("✅ Ready")
+                self.provider_status_label.setStyleSheet("color: green; font-weight: bold;")
+        
+        self.add_log_entry(f"🔧 Algorithm provider changed to: {provider}")
+    
+    def on_security_level_changed(self, level):
+        """Handle security level change"""
+        descriptions = {
+            "0x01": "Service mode access",
+            "0x02": "Programming mode access", 
+            "0x03": "Extended diagnostic access",
+            "0x04": "Safety system access",
+            "0x05": "Development mode access"
+        }
+        
+        level_num = level.split()[0]
+        description = descriptions.get(level_num, "Unknown security level")
+        if hasattr(self, 'level_description_label'):
+            self.level_description_label.setText(description)
+        self.add_log_entry(f"🔐 Security level changed to: {level}")
+    
+    def on_manual_key_toggled(self, checked):
+        """Handle manual key input toggle"""
+        if hasattr(self, 'key_edit'):
+            self.key_edit.setReadOnly(not checked)
+            if checked:
+                self.key_edit.setPlaceholderText("Enter key manually")
+                if hasattr(self, 'calculate_key_btn'):
+                    self.calculate_key_btn.setEnabled(False)
+            else:
+                self.key_edit.setPlaceholderText("Key will be calculated")
+                if hasattr(self, 'calculate_key_btn'):
+                    self.calculate_key_btn.setEnabled(bool(self.seed_edit.text().strip()))
+    
+    def copy_seed(self):
+        """Copy seed to clipboard"""
+        if hasattr(self, 'seed_edit') and self.seed_edit.text():
+            QApplication.clipboard().setText(self.seed_edit.text())
+            self.add_log_entry("📋 Seed copied to clipboard")
+    
+    def copy_key(self):
+        """Copy key to clipboard"""
+        if hasattr(self, 'key_edit') and self.key_edit.text():
+            QApplication.clipboard().setText(self.key_edit.text())
+            self.add_log_entry("📋 Key copied to clipboard")
+    
+    def clear_security_data(self):
+        """Clear all security access data"""
+        if hasattr(self, 'seed_edit'):
+            self.seed_edit.clear()
+        if hasattr(self, 'key_edit'):
+            self.key_edit.clear()
+        if hasattr(self, 'security_status_label'):
+            self.security_status_label.setText("🔒 Security Locked")
+            self.security_status_label.setStyleSheet("color: red; font-weight: bold;")
+        if hasattr(self, 'current_level_label'):
+            self.current_level_label.setText("Level: None")
+        if hasattr(self, 'send_key_btn'):
+            self.send_key_btn.setEnabled(False)
+        if hasattr(self, 'calculate_key_btn'):
+            self.calculate_key_btn.setEnabled(False)
+        self.add_log_entry("🗑️ Security data cleared")
+    
+    def browse_dll_file(self):
+        """Browse for security DLL file"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, 
+            "Select Security Access DLL", 
+            "", 
+            "DLL Files (*.dll);;All Files (*)"
+        )
+        if file_path and hasattr(self, 'dll_path_edit'):
+            self.dll_path_edit.setText(file_path)
+    
+    def load_dll(self):
+        """Load security access DLL"""
+        if not hasattr(self, 'dll_interface') or not self.dll_interface:
+            QMessageBox.warning(self, "DLL Interface Error", "DLL interface not available")
+            return
+            
+        if not hasattr(self, 'dll_path_edit'):
+            return
+            
+        dll_path = self.dll_path_edit.text().strip()
+        if not dll_path:
+            QMessageBox.warning(self, "No DLL Selected", "Please select a DLL file first")
+            return
+            
+        ecu_name = self.ecu_combo.currentText() if hasattr(self, 'ecu_combo') else "Default_ECU"
+            
+        try:
+            if self.dll_interface.load_security_dll(dll_path, ecu_name):
+                self.add_log_entry(f"📚 Successfully loaded DLL: {dll_path}")
+            else:
+                QMessageBox.critical(self, "DLL Load Error", "Failed to load DLL")
+        except Exception as e:
+            QMessageBox.critical(self, "DLL Load Error", f"Error loading DLL: {str(e)}")
+    
+    def save_dll_config(self):
+        """Save current DLL configuration"""
+        if not hasattr(self, 'dll_interface') or not self.dll_interface:
+            return
+            
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, 
+            "Save DLL Configuration", 
+            "", 
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if file_path:
+            try:
+                self.dll_interface.save_configuration(file_path)
+                self.add_log_entry(f"💾 DLL configuration saved: {file_path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Save Error", f"Error saving configuration: {str(e)}")
+    
+    def load_dll_config(self):
+        """Load DLL configuration"""
+        if not hasattr(self, 'dll_interface') or not self.dll_interface:
+            return
+            
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, 
+            "Load DLL Configuration", 
+            "", 
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if file_path:
+            try:
+                self.dll_interface.load_configuration(file_path)
+                self.add_log_entry(f"📂 DLL configuration loaded: {file_path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Load Error", f"Error loading configuration: {str(e)}")
+    
+    def test_dll(self):
+        """Test DLL functionality"""
+        if not hasattr(self, 'dll_interface') or not self.dll_interface or not self.dll_interface.is_dll_loaded():
+            QMessageBox.warning(self, "No DLL", "Please load a DLL first")
+            return
+            
+        # Test with sample data
+        test_seed = b'\x12\x34\x56\x78'
+        try:
+            ecu_name = self.ecu_combo.currentText() if hasattr(self, 'ecu_combo') else "Test_ECU"
+            test_key = self.dll_interface.calculate_key_with_dll(
+                ecu_name=ecu_name,
+                seed=test_seed, 
+                level=1
+            )
+            if test_key:
+                test_key_hex = " ".join([f"{b:02X}" for b in test_key])
+                QMessageBox.information(
+                    self, 
+                    "DLL Test Successful", 
+                    f"Test seed: {test_seed.hex().upper()}\nCalculated key: {test_key_hex}"
+                )
+                self.add_log_entry(f"🧪 DLL test successful - Key: {test_key_hex}")
+            else:
+                QMessageBox.warning(self, "DLL Test Failed", "DLL returned no key")
+        except Exception as e:
+            QMessageBox.critical(self, "DLL Test Error", f"Error testing DLL: {str(e)}")
+    
+    def calculate_security_key(self):
+        """Calculate security key using selected provider"""
+        if not hasattr(self, 'seed_edit'):
+            return
+            
+        seed_hex = self.seed_edit.text().strip()
+        if not seed_hex:
+            QMessageBox.warning(self, "No Seed", "Please request a seed first")
+            return
+            
+        try:
+            # Convert hex string to bytes
+            seed_bytes = bytes.fromhex(seed_hex.replace("0x", "").replace(" ", ""))
+            provider = self.algorithm_provider_combo.currentText() if hasattr(self, 'algorithm_provider_combo') else "Built-in"
+            
+            key_bytes = None
+            
+            if "DLL" in provider and hasattr(self, 'dll_interface') and self.dll_interface and self.dll_interface.is_dll_loaded():
+                # Use DLL for calculation
+                try:
+                    security_level = int(self.security_level_combo.currentText().split()[0], 16) if hasattr(self, 'security_level_combo') else 1
+                    ecu_name = self.ecu_combo.currentText() if hasattr(self, 'ecu_combo') else "Default_ECU"
+                    key_bytes = self.dll_interface.calculate_key_with_dll(
+                        ecu_name=ecu_name,
+                        seed=seed_bytes, 
+                        level=security_level
+                    )
+                    
+                    if key_bytes:
+                        self.add_log_entry("🧮 Key calculated using DLL")
+                    else:
+                        raise ValueError("DLL returned no key")
+                        
+                except Exception as dll_error:
+                    if "Auto" in provider:
+                        self.add_log_entry(f"⚠️ DLL failed: {str(dll_error)}, falling back to built-in")
+                        key_bytes = None  # Will fall through to built-in
+                    else:
+                        raise dll_error
+            
+            if key_bytes is None:
+                # Use built-in algorithm (default to XOR)
+                key_bytes = bytes([b ^ 0x12 for b in seed_bytes])
+                self.add_log_entry("🧮 Key calculated using built-in XOR algorithm")
+            
+            # Convert back to hex
+            key_hex = " ".join([f"{b:02X}" for b in key_bytes])
+            if hasattr(self, 'key_edit'):
+                self.key_edit.setText(key_hex)
+            if hasattr(self, 'send_key_btn'):
+                self.send_key_btn.setEnabled(True)
+            
+        except ValueError as e:
+            QMessageBox.critical(self, "Calculation Error", f"Error calculating key: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "Calculation Error", f"Unexpected error: {str(e)}")
+    
+    def on_dll_loaded(self, dll_path):
+        """Handle DLL loaded signal"""
+        if hasattr(self, 'dll_status_label'):
+            self.dll_status_label.setText(f"✅ DLL loaded: {dll_path}")
+            self.dll_status_label.setStyleSheet("color: green; font-weight: bold;")
+        if hasattr(self, 'algorithm_provider_combo'):
+            self.on_provider_changed(self.algorithm_provider_combo.currentText())
+    
+    def on_dll_unloaded(self):
+        """Handle DLL unloaded signal"""
+        if hasattr(self, 'dll_status_label'):
+            self.dll_status_label.setText("📚 No DLL loaded")
+            self.dll_status_label.setStyleSheet("color: #666; font-style: italic;")
+        if hasattr(self, 'algorithm_provider_combo'):
+            self.on_provider_changed(self.algorithm_provider_combo.currentText())
+    
+    def on_dll_error(self, error_message):
+        """Handle DLL error signal"""
+        if hasattr(self, 'dll_status_label'):
+            self.dll_status_label.setText(f"❌ DLL Error: {error_message}")
+            self.dll_status_label.setStyleSheet("color: red; font-weight: bold;")
+        self.add_log_entry(f"❌ DLL Error: {error_message}")
+    
+    def on_dll_key_calculated(self, key_bytes):
+        """Handle DLL key calculation result"""
+        key_hex = " ".join([f"{b:02X}" for b in key_bytes])
+        if hasattr(self, 'key_edit'):
+            self.key_edit.setText(key_hex)
+        if hasattr(self, 'send_key_btn'):
+            self.send_key_btn.setEnabled(True)
+        self.add_log_entry(f"🔑 DLL calculated key: {key_hex}")
+    
+    def _get_enhanced_help_text(self):
+        """Get enhanced help text for key calculation"""
+        return """
+        <b>🧮 Key Calculation Methods:</b><br>
+        <b>Built-in Algorithms:</b><br>
+        • <b>XOR:</b> seed ⊕ 0x12 (most common)<br>
+        • <b>ADD:</b> (seed + 0x34) & 0xFF<br>
+        • <b>Complement:</b> ~seed & 0xFF<br>
+        • <b>CRC16:</b> CRC16-CCITT checksum<br><br>
+        <b>DLL Integration:</b><br>
+        • Load manufacturer-specific DLLs<br>
+        • Auto-fallback to built-in algorithms<br>
+        • ASAM/ODX-D compatible interface<br><br>
+        <b>Usage:</b> Request seed first, then calculate or enter key manually
+        """

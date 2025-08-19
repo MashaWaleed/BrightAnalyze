@@ -1,0 +1,76 @@
+{
+  "dll_configs": {
+    "bmw_engine": {
+      "dll_path": "C:/OEM_DLLs/BMW_Engine_SecurityAccess.dll",
+      "description": "BMW Engine ECU Security Access",
+      "manufacturer": "BMW",
+      "algorithm_type": "proprietary",
+      "notes": "Requires BMW diagnostic session"
+    },
+    "vw_transmission": {
+      "dll_path": "C:/OEM_DLLs/VAG_Transmission_SecurityAccess.dll",
+      "description": "Volkswagen Group Transmission ECU",
+      "manufacturer": "Volkswagen",
+      "algorithm_type": "seed_key_transformation",
+      "notes": "Compatible with Audi, Skoda, SEAT"
+    }
+  },
+  "ecu_configs": {
+    "Engine_ECU_0x7E0": {
+      "dll_config": "bmw_engine",
+      "can_tx_id": "0x7E0",
+      "can_rx_id": "0x7E8",
+      "security_levels": {
+        "1": {
+          "description": "Service mode",
+          "session_required": "0x02"
+        },
+        "3": {
+          "description": "Programming",
+          "session_required": "0x02"
+        }
+      },
+      "timeouts": {
+        "seed_request": 5000,
+        "key_send": 3000
+      }
+    },
+    "Transmission_ECU_0x7E1": {
+      "dll_config": "vw_transmission",
+      "can_tx_id": "0x7E1",
+      "can_rx_id": "0x7E9",
+      "security_levels": {
+        "1": {
+          "description": "Diagnostic",
+          "session_required": "0x03"
+        },
+        "5": {
+          "description": "Calibration",
+          "session_required": "0x03"
+        }
+      },
+      "timeouts": {
+        "seed_request": 3000,
+        "key_send": 2000
+      }
+    }
+  },
+  "fallback_algorithms": {
+    "xor_constant": {
+      "constant": "0x1234",
+      "description": "Simple XOR"
+    },
+    "add_constant": {
+      "constant": "0x5678",
+      "description": "Simple addition"
+    },
+    "complement": {
+      "description": "Bitwise complement"
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Security Access DLL Configuration",
+    "created_by": "CAN Analyzer Security Module"
+  }
+}

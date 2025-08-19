@@ -1,0 +1,910 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{titlesec}
+\usepackage{fontawesome5}
+
+% Custom colors
+\definecolor{canblue}{RGB}{0,102,204}
+\definecolor{cangray}{RGB}{64,64,64}
+\definecolor{cangreen}{RGB}{34,139,34}
+\definecolor{canred}{RGB}{220,20,60}
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{canblue}{\textbf{Professional CAN Bus Analyzer}}}
+\fancyhead[R]{\textcolor{cangray}{User Guide v1.0}}
+\fancyfoot[C]{\thepage}
+
+% Title formatting
+\titleformat{\section}
+{\color{canblue}\Large\bfseries}
+{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\color{cangray}\large\bfseries}
+{\thesubsection}{1em}{}
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=canblue,
+    urlcolor=canblue,
+    citecolor=canblue
+}
+
+% Code listings setup
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{canblue},
+    commentstyle=\color{cangreen},
+    stringstyle=\color{canred},
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+\begin{document}
+
+% Title Page
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\textcolor{canblue}{\textbf{Professional CAN Bus Analyzer}}\par}
+    \vspace{0.5cm}
+    {\Large\textcolor{cangray}{Comprehensive User Guide}\par}
+    \vspace{1.5cm}
+    
+    % Application Logo/Icon placeholder
+    \begin{figure}[h]
+        \centering
+        \textcolor{canblue}{\faIcon{microchip}} \quad 
+        \textcolor{cangreen}{\faIcon{network-wired}} \quad 
+        \textcolor{canred}{\faIcon{chart-line}}
+    \end{figure}
+    
+    \vspace{2cm}
+    {\Large\textbf{Version 1.0}\par}
+    \vspace{0.5cm}
+    {\large Professional CAN Bus Analysis \& UDS Diagnostics\par}
+    
+    \vfill
+    
+    {\large\textcolor{cangray}{
+    \textbf{Features:}\\
+    \faIcon{check} Advanced UDS Diagnostics\\
+    \faIcon{check} Professional CAN Bus Analysis\\
+    \faIcon{check} Real-time Signal Plotting\\
+    \faIcon{check} DBC File Management\\
+    \faIcon{check} Professional Message Logging\\
+    \faIcon{check} Cross-platform Compatibility
+    }\par}
+    
+    \vspace{1cm}
+    {\large \today\par}
+\end{titlepage}
+
+% Table of Contents
+\tableofcontents
+\newpage
+
+% Introduction
+\section{Introduction}
+
+\textbf{📺 Video Overview:} For a quick demonstration of the application's capabilities, watch the overview video at: \href{https://youtu.be/YOUR_VIDEO_ID}{\texttt{https://youtu.be/YOUR\_VIDEO\_ID}}
+
+The Professional CAN Bus Analyzer is a comprehensive tool for automotive diagnostics, CAN bus analysis, and ECU communication. This application provides advanced features for professional automotive engineers, diagnostic technicians, and researchers working with Controller Area Network (CAN) protocols.
+
+\subsection{Key Features}
+
+\begin{itemize}[label=\textcolor{canblue}{\faIcon{check}}]
+    \item \textbf{Multi-Protocol Support}: CAN 2.0A/B, CAN-FD, UDS (ISO 14229), OBD-II
+    \item \textbf{Advanced Security Access}: Built-in algorithms and DLL integration
+    \item \textbf{Real-time Analysis}: Live message monitoring and signal plotting
+    \item \textbf{DBC Integration}: Import/export database files for message interpretation
+    \item \textbf{Professional Logging}: Comprehensive message capture and analysis
+    \item \textbf{Cross-platform}: Windows, Linux, and macOS support
+    \item \textbf{Modern UI}: Intuitive interface with dark/light themes
+\end{itemize}
+
+\subsection{System Requirements}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Component} & \textbf{Requirement} \\
+\midrule
+Operating System & Windows 10+, Linux (Ubuntu 18.04+), macOS 10.14+ \\
+Python & 3.8 or newer \\
+Memory & 4 GB RAM minimum (8 GB recommended) \\
+Storage & 1 GB free space \\
+CAN Interface & SocketCAN, PCAN, Vector, CANable, or similar \\
+\bottomrule
+\end{tabular}
+\caption{System Requirements}
+\end{table}
+
+\textbf{Note:} This application has been tested with the CANable open source USB-to-CAN adapter, which provides an excellent low-cost solution for CAN bus communication. CANable is compatible with SocketCAN on Linux and provides reliable performance for automotive diagnostics.
+
+% Application Overview
+\section{Application Overview}
+
+\subsection{Main Interface Layout}
+
+The application features a modern, professional interface designed for efficiency and ease of use. The main window is divided into several key areas:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{screenshots/overview.png}
+    \caption{Main Application Interface Overview}
+    \label{fig:overview}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Menu Bar}: Access to all application functions and settings
+    \item \textbf{Toolbar}: Quick access to frequently used tools
+    \item \textbf{Left Sidebar}: Connection settings and CAN interface configuration
+    \item \textbf{Central Area}: Main workspace with tabbed panels
+    \item \textbf{Right Sidebar}: Message filters, DBC management, and signal plotting
+    \item \textbf{Status Bar}: Connection status and real-time statistics
+    \item \textbf{Message Log}: Real-time CAN message display and analysis
+\end{enumerate}
+
+\subsection{Application Themes}
+
+The application supports both light and dark themes for optimal viewing in different environments:
+
+\begin{itemize}
+    \item \textbf{Light Theme}: Professional appearance for office environments
+    \item \textbf{Dark Theme}: Reduced eye strain for extended use
+    \item \textbf{Custom Themes}: Configurable color schemes
+\end{itemize}
+
+% Getting Started
+\section{Getting Started}
+
+\subsection{Installation}
+
+\subsubsection{Pre-built Releases (Recommended)}
+
+The easiest way to get started is to download pre-built releases from the official GitHub repository:
+
+\begin{enumerate}
+    \item Visit: \texttt{https://github.com/MashaWaleed/BrightAnalyze}
+    \item Navigate to the \textbf{Releases} section
+    \item Download the appropriate version for your operating system:
+    \begin{itemize}
+        \item \textbf{Windows}: \texttt{CANAnalyzer-Windows.exe} - Standalone executable
+        \item \textbf{Linux}: \texttt{CANAnalyzer-Linux} - Portable binary
+    \end{itemize}
+    \item Extract (if needed) and run the application directly
+\end{enumerate}
+
+\subsubsection{Source Installation}
+
+For development or customization, install from source:
+
+\begin{enumerate}
+    \item Clone the repository:
+    \begin{lstlisting}[language=bash]
+git clone https://github.com/MashaWaleed/BrightAnalyze.git
+cd BrightAnalyze/can_analyzer
+    \end{lstlisting}
+    
+    \item Install required Python packages:
+    \begin{lstlisting}[language=bash]
+pip install -r requirements.txt
+    \end{lstlisting}
+\end{enumerate}
+
+\subsubsection{Application Launch}
+
+For source installation, start the application using:
+
+\begin{lstlisting}[language=bash]
+python main.py
+\end{lstlisting}
+
+For pre-built releases, simply double-click the executable or run from terminal.
+
+\subsection{Initial Configuration}
+
+\subsubsection{CAN Interface Setup}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{screenshots/config.png}
+    \caption{CAN Interface Configuration}
+    \label{fig:config}
+\end{figure}
+
+To configure your CAN interface:
+
+\begin{enumerate}
+    \item Open the \textbf{Settings} menu
+    \item Select \textbf{CAN Interface Configuration}
+    \item Choose your interface type:
+    \begin{itemize}
+        \item \textbf{SocketCAN} (Linux): Native Linux CAN support
+        \item \textbf{PCAN}: Peak System CAN interfaces
+        \item \textbf{Vector}: Vector Informatik interfaces
+        \item \textbf{CANable}: Open source USB-to-CAN adapter (recommended)
+        \item \textbf{Virtual}: Simulation mode for testing
+    \end{itemize}
+    \item Set the bitrate (typically 250k, 500k, or 1M bps)
+    \item Configure extended frames if needed
+    \item Click \textbf{Apply} to save settings
+\end{enumerate}
+
+\subsection{First Connection}
+
+\begin{enumerate}
+    \item Ensure your CAN interface is properly connected
+    \item Set the correct bitrate matching your CAN network
+    \item Click the \textcolor{cangreen}{\faIcon{play}} \textbf{Connect} button
+    \item Verify connection status in the status bar
+    \item You should see live CAN messages in the message log
+\end{enumerate}
+
+% DBC File Management
+\section{DBC File Management}
+
+Database CAN (DBC) files contain definitions for CAN messages, signals, and ECU information. The application provides comprehensive DBC management capabilities.
+
+\subsection{Loading DBC Files}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/dbc1.png}
+    \caption{DBC File Loading Interface}
+    \label{fig:dbc1}
+\end{figure}
+
+To load a DBC file:
+
+\begin{enumerate}
+    \item Navigate to \textbf{File} $\rightarrow$ \textbf{Load DBC}
+    \item Select your DBC file from the file browser
+    \item The application will parse and validate the file
+    \item Messages and signals will appear in the DBC panel
+    \item You can load multiple DBC files simultaneously
+\end{enumerate}
+
+\subsection{DBC Message Analysis}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/dbc2.png}
+    \caption{DBC Message and Signal Analysis}
+    \label{fig:dbc2}
+\end{figure}
+
+The DBC panel provides detailed message analysis:
+
+\begin{itemize}
+    \item \textbf{Message List}: All defined messages with IDs and names
+    \item \textbf{Signal Details}: Individual signal definitions within messages
+    \item \textbf{Value Interpretation}: Real-world values based on scaling factors
+    \item \textbf{Units and Ranges}: Engineering units and valid value ranges
+    \item \textbf{Real-time Updates}: Live signal values from incoming messages
+\end{itemize}
+
+\subsection{Message Transmission}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/transmit1.png}
+    \caption{Message Transmission Panel}
+    \label{fig:transmit1}
+\end{figure}
+
+To transmit CAN messages:
+
+\begin{enumerate}
+    \item Select the \textbf{Transmit} tab
+    \item Choose a message from the DBC database or create custom
+    \item Set individual signal values using the controls
+    \item Configure transmission options:
+    \begin{itemize}
+        \item \textbf{Single Shot}: Send once
+        \item \textbf{Periodic}: Repeat at specified interval
+        \item \textbf{Burst}: Send multiple times rapidly
+    \end{itemize}
+    \item Click \textbf{Send} to transmit the message
+\end{enumerate}
+
+\subsection{Message Editing and Raw Data}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/transmit2.png}
+    \caption{Message Editing and Signal Configuration}
+    \label{fig:transmit2}
+\end{figure}
+
+The message transmission panel provides comprehensive editing capabilities:
+
+\begin{itemize}
+    \item \textbf{Raw Data Editing}: Direct hexadecimal data input and editing
+    \item \textbf{Signal-based Editing}: Modify individual signals within messages
+    \item \textbf{Value Scaling}: Automatic conversion between raw and engineering values
+    \item \textbf{Data Validation}: Real-time validation of message format and content
+    \item \textbf{Message Templates}: Save and reuse common message configurations
+\end{itemize}
+
+\subsubsection{Raw Data Message Panel}
+
+The raw data panel allows direct manipulation of CAN message content:
+
+\begin{enumerate}
+    \item \textbf{Hex Editor}: Edit message data byte-by-byte in hexadecimal format
+    \item \textbf{ASCII View}: View and edit printable characters in the data
+    \item \textbf{Binary Viewer}: Examine individual bits within each byte
+    \item \textbf{Data Length}: Configure message data length (0-8 bytes for standard CAN)
+    \item \textbf{Format Validation}: Automatic checking for valid CAN frame format
+\end{enumerate}
+
+\subsubsection{Signal Editing Features}
+
+When a DBC file is loaded, the signal editing interface provides:
+
+\begin{itemize}
+    \item \textbf{Individual Signal Controls}: Sliders, spin boxes, and text fields for each signal
+    \item \textbf{Engineering Units}: Display and input values in proper engineering units
+    \item \textbf{Min/Max Validation}: Automatic enforcement of signal value ranges
+    \item \textbf{Real-time Preview}: See how signal changes affect raw message data
+    \item \textbf{Signal Grouping}: Organize related signals for easier manipulation
+\end{itemize}
+
+\subsection{Message Transmission Options}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/transmit3.png}
+    \caption{Transmission Configuration and Scheduling}
+    \label{fig:transmit3}
+\end{figure}
+
+Configure how messages are transmitted to the CAN bus:
+
+\begin{itemize}
+    \item \textbf{Single Shot}: Send the message once immediately
+    \item \textbf{Periodic Transmission}: Repeat at specified intervals (10ms to 10s)
+    \item \textbf{Manual Trigger}: Send messages on demand via button click
+    \item \textbf{Message Queuing}: Queue multiple messages for sequential transmission
+    \item \textbf{Transmission Status}: Real-time feedback on transmission success/failure
+\end{itemize}
+
+% UDS Diagnostics
+\section{UDS Diagnostics}
+
+Unified Diagnostic Services (UDS) provide standardized communication with automotive ECUs for diagnostics, programming, and maintenance.
+
+\subsection{UDS Connection Setup}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/UDS1.png}
+    \caption{UDS Connection and Session Management}
+    \label{fig:uds1}
+\end{figure}
+
+To establish UDS communication:
+
+\begin{enumerate}
+    \item Open the \textbf{Diagnostics} tab
+    \item Configure the ECU connection:
+    \begin{itemize}
+        \item \textbf{Request ID}: Tester's CAN ID (e.g., 0x7E0)
+        \item \textbf{Response ID}: ECU's response ID (e.g., 0x7E8)
+        \item \textbf{Functional ID}: Functional addressing (optional)
+    \end{itemize}
+    \item Select the diagnostic session type:
+    \begin{itemize}
+        \item \textbf{Default Session (0x01)}: Standard diagnostic access
+        \item \textbf{Programming Session (0x02)}: ECU programming mode
+        \item \textbf{Extended Session (0x03)}: Enhanced diagnostic functions
+    \end{itemize}
+    \item Click \textbf{Connect UDS} to establish communication
+    \item Enable \textbf{Tester Present} to maintain the session
+\end{enumerate}
+
+\subsection{Diagnostic Trouble Codes (DTCs)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/uds2.png}
+    \caption{DTC Reading and Management}
+    \label{fig:uds2}
+\end{figure}
+
+The DTC management system provides:
+
+\begin{itemize}
+    \item \textbf{Read Active DTCs}: Current fault codes
+    \item \textbf{Read Pending DTCs}: Intermittent faults
+    \item \textbf{Read Permanent DTCs}: Emission-related persistent codes
+    \item \textbf{Clear DTCs}: Reset fault memory
+    \item \textbf{DTC Details}: Comprehensive fault information including:
+    \begin{itemize}
+        \item DTC number and description
+        \item Fault status information
+        \item Environmental data
+        \item Snapshot records
+    \end{itemize}
+\end{itemize}
+
+\subsection{Data Identifier Services}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/uds3.png}
+    \caption{Data Identifier Reading and Writing}
+    \label{fig:uds3}
+\end{figure}
+
+Data Identifier (DID) services allow access to ECU parameters:
+
+\begin{itemize}
+    \item \textbf{Read Data by Identifier (0x22)}: Read specific parameters
+    \item \textbf{Write Data by Identifier (0x2E)}: Modify ECU parameters
+    \item \textbf{Common DIDs}: Pre-defined standard identifiers
+    \item \textbf{Custom DIDs}: Manufacturer-specific parameters
+    \item \textbf{Data Interpretation}: Automatic value scaling and units
+\end{itemize}
+
+Popular DIDs include:
+\begin{itemize}
+    \item \textbf{0xF186}: ECU Serial Number
+    \item \textbf{0xF190}: VIN (Vehicle Identification Number)
+    \item \textbf{0xF195}: ECU Software Version
+    \item \textbf{0xF197}: ECU Hardware Version
+\end{itemize}
+
+\subsection{Security Access}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/uds4.png}
+    \caption{Security Access Configuration}
+    \label{fig:uds4}
+\end{figure}
+
+Security Access (Service 0x27) protects sensitive ECU functions:
+
+\subsubsection{ECU Configuration}
+
+Configure your target ECU:
+\begin{itemize}
+    \item \textbf{ECU Selection}: Choose from predefined ECU types
+    \item \textbf{Custom ECU}: Define your own ECU parameters
+    \item \textbf{Security Levels}: Different access levels (0x01, 0x02, 0x03, etc.)
+\end{itemize}
+
+\subsubsection{Algorithm Provider Selection}
+
+Choose your key calculation method:
+\begin{itemize}
+    \item \textbf{Built-in Algorithms}: XOR, ADD, Complement, CRC16
+    \item \textbf{DLL Integration}: Manufacturer-specific DLLs
+    \item \textbf{Auto Mode}: DLL with built-in fallback
+\end{itemize}
+
+\subsubsection{DLL Management}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/uds5.png}
+    \caption{DLL Management and Testing}
+    \label{fig:uds5}
+\end{figure}
+
+The application supports manufacturer DLLs:
+
+\begin{enumerate}
+    \item \textbf{Load DLL}: Browse and load security DLL files
+    \item \textbf{DLL Configuration}: Save/load DLL settings
+    \item \textbf{DLL Testing}: Verify DLL functionality with test data
+    \item \textbf{Wine Support}: Windows DLLs on Linux systems
+    \item \textbf{ASAM Compliance}: Standard ODX-D interface support
+\end{enumerate}
+
+\subsubsection{Security Access Procedure}
+
+The standard security access procedure:
+
+\begin{enumerate}
+    \item \textbf{Request Seed}: Send security access request (0x27 0x01)
+    \item \textbf{Receive Seed}: ECU responds with challenge seed
+    \item \textbf{Calculate Key}: Use algorithm or DLL to compute response
+    \item \textbf{Send Key}: Submit calculated key (0x27 0x02)
+    \item \textbf{Access Granted}: ECU grants security access if key is correct
+\end{enumerate}
+
+\subsubsection{Built-in Algorithms}
+
+The application includes several common algorithms:
+
+\begin{itemize}
+    \item \textbf{XOR Algorithm}: \texttt{key = seed XOR 0x12}
+    \item \textbf{ADD Algorithm}: \texttt{key = (seed + 0x34) \& 0xFF}
+    \item \textbf{Complement}: \texttt{key = \~{}seed \& 0xFF}
+    \item \textbf{CRC16}: CRC16-CCITT checksum calculation
+\end{itemize}
+
+% Message Logging and Analysis
+\section{Message Logging and Analysis}
+
+\subsection{Real-time Message Display}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/log1.png}
+    \caption{Real-time Message Logging}
+    \label{fig:log1}
+\end{figure}
+
+The message log provides comprehensive CAN traffic analysis:
+
+\begin{itemize}
+    \item \textbf{Live Updates}: Real-time message display
+    \item \textbf{Color Coding}: Different colors for message types
+    \item \textbf{Filtering}: Show/hide specific message IDs
+    \item \textbf{Search}: Find specific messages or patterns
+    \item \textbf{Statistics}: Message count and rate information
+\end{itemize}
+
+\subsection{Advanced Logging Features}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{screenshots/log2.png}
+    \caption{Advanced Logging and Analysis Tools}
+    \label{fig:log2}
+\end{figure}
+
+Advanced logging capabilities include:
+
+\begin{itemize}
+    \item \textbf{Export Formats}: CSV, ASC, BLF, LOG file export
+    \item \textbf{Timestamps}: High-resolution timing information
+    \item \textbf{Message Replay}: Playback recorded sessions
+    \item \textbf{Trigger Recording}: Event-based capture
+    \item \textbf{Bandwidth Analysis}: Bus load monitoring
+\end{itemize}
+
+\subsection{Message Filtering}
+
+Create sophisticated filters to focus on relevant traffic:
+
+\begin{itemize}
+    \item \textbf{ID Ranges}: Filter by CAN ID ranges
+    \item \textbf{Data Patterns}: Match specific data content
+    \item \textbf{Direction}: Separate TX and RX messages
+    \item \textbf{Message Types}: Standard, Extended, Error frames
+    \item \textbf{Signal-based}: Filter by decoded signal values
+\end{itemize}
+
+% Message Configuration Dialogs
+\section{Message Configuration Dialogs}
+
+\subsection{Add/Edit Message Dialog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{screenshots/dialog1.png}
+    \caption{Add New Message Dialog}
+    \label{fig:dialog1}
+\end{figure}
+
+When adding or editing transmit messages, the configuration dialog provides:
+
+\begin{itemize}
+    \item \textbf{Message Properties}: Set CAN ID, data length, and frame type
+    \item \textbf{Data Entry}: Input message data in hexadecimal format
+    \item \textbf{Transmission Settings}: Configure send intervals and repetition
+    \item \textbf{Validation}: Real-time checking of message format and parameters
+    \item \textbf{Preview}: See how the message will appear on the CAN bus
+\end{itemize}
+
+\subsubsection{Message Configuration Options}
+
+The dialog allows configuration of:
+
+\begin{enumerate}
+    \item \textbf{CAN ID}: Set the message identifier (11-bit standard or 29-bit extended)
+    \item \textbf{Frame Type}: Choose between Standard and Extended CAN frames
+    \item \textbf{Data Bytes}: Enter up to 8 bytes of data in hexadecimal format
+    \item \textbf{Transmission Mode}: Select single-shot or periodic transmission
+    \item \textbf{Period Settings}: Set transmission interval for periodic messages
+\end{enumerate}
+
+\subsection{Message Edit Dialog}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{screenshots/dialog2.png}
+    \caption{Edit Existing Message Dialog}
+    \label{fig:dialog2}
+\end{figure}
+
+When editing existing messages, the dialog provides:
+
+\begin{itemize}
+    \item \textbf{Current Values}: Display existing message configuration
+    \item \textbf{Modification Controls}: Edit any aspect of the message
+    \item \textbf{History Tracking}: See previous versions of the message
+    \item \textbf{Quick Actions}: Apply common modifications quickly
+    \item \textbf{Save Options}: Save changes or create new message variants
+\end{itemize}
+
+\subsubsection{Advanced Editing Features}
+
+The edit dialog includes:
+
+\begin{itemize}
+    \item \textbf{Signal Integration}: If DBC is loaded, edit by signal values
+    \item \textbf{Data Format Options}: Switch between hex, decimal, and binary views
+    \item \textbf{Template Application}: Apply predefined message templates
+    \item \textbf{Batch Editing}: Modify multiple similar messages at once
+    \item \textbf{Export/Import}: Save message configurations for reuse
+\end{itemize}
+
+% Advanced Features
+\section{Advanced Features}
+
+\subsection{Signal Plotting and Analysis}
+
+The signal plotter provides real-time visualization of CAN signals:
+
+\begin{itemize}
+    \item \textbf{Multi-signal Plots}: Display multiple signals simultaneously
+    \item \textbf{Time-based Analysis}: Historical signal trends
+    \item \textbf{Zoom and Pan}: Detailed waveform inspection
+    \item \textbf{Trigger Modes}: Capture specific events
+    \item \textbf{Export Plots}: Save graphs for documentation
+\end{itemize}
+
+\subsection{Scripting Console}
+
+Automate complex operations with Python scripting:
+
+\begin{itemize}
+    \item \textbf{Interactive Console}: Real-time Python execution
+    \item \textbf{Script Library}: Pre-defined diagnostic scripts
+    \item \textbf{Custom Scripts}: Write your own automation
+    \item \textbf{API Access}: Full application programming interface
+    \item \textbf{Batch Processing}: Automated test sequences
+\end{itemize}
+
+\subsection{Workspace Management}
+
+Organize your work with workspace features:
+
+\begin{itemize}
+    \item \textbf{Project Files}: Save complete analysis sessions
+    \item \textbf{Configuration Profiles}: Store interface settings
+    \item \textbf{Template Systems}: Reusable configurations
+    \item \textbf{Import/Export}: Share configurations with colleagues
+\end{itemize}
+
+% Troubleshooting
+\section{Troubleshooting}
+
+\subsection{Common Issues and Solutions}
+
+\subsubsection{Connection Problems}
+
+\textbf{Issue}: Cannot connect to CAN interface
+\begin{itemize}
+    \item Verify physical connections
+    \item Check bitrate settings match the network
+    \item Ensure proper drivers are installed
+    \item Try different CAN channel if available
+\end{itemize}
+
+\textbf{Issue}: No messages received
+\begin{itemize}
+    \item Verify CAN bus has active traffic
+    \item Check termination resistors (120Ω each end)
+    \item Ensure correct acceptance filters
+    \item Verify power supply to CAN interface
+\end{itemize}
+
+\subsubsection{UDS Communication Issues}
+
+\textbf{Issue}: UDS connection fails
+\begin{itemize}
+    \item Verify Request/Response ID configuration
+    \item Check ECU is in correct diagnostic session
+    \item Ensure proper timing parameters
+    \item Verify ECU supports UDS protocol
+\end{itemize}
+
+\textbf{Issue}: Security access denied
+\begin{itemize}
+    \item Verify security level is correct
+    \item Check key calculation algorithm
+    \item Ensure seed is properly received
+    \item Try built-in algorithms if DLL fails
+\end{itemize}
+
+\subsubsection{Performance Issues}
+
+\textbf{Issue}: Application runs slowly
+\begin{itemize}
+    \item Reduce message log buffer size
+    \item Disable unused signal plotting
+    \item Close unnecessary tabs
+    \item Increase system RAM if needed
+\end{itemize}
+
+\subsection{Log File Analysis}
+
+When reporting issues, include relevant log files:
+
+\begin{itemize}
+    \item \textbf{Application Logs}: Check console output for error messages
+    \item \textbf{CAN Logs}: Export message logs for analysis
+    \item \textbf{Configuration Files}: Include settings that cause issues
+    \item \textbf{System Information}: OS version, Python version, hardware details
+\end{itemize}
+
+% Appendices
+\section{Appendices}
+
+\subsection{Keyboard Shortcuts}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Shortcut} & \textbf{Function} \\
+\midrule
+Ctrl+N & New Workspace \\
+Ctrl+O & Open Workspace \\
+Ctrl+S & Save Workspace \\
+Ctrl+Q & Quit Application \\
+F5 & Connect/Disconnect \\
+F9 & Start/Stop Logging \\
+Ctrl+F & Find Messages \\
+Ctrl+E & Export Log \\
+Ctrl+T & Toggle Theme \\
+F1 & Help \\
+\bottomrule
+\end{tabular}
+\caption{Keyboard Shortcuts}
+\end{table}
+
+\subsection{File Formats}
+
+\subsubsection{Supported Import Formats}
+
+\begin{itemize}
+    \item \textbf{DBC}: Database CAN files
+    \item \textbf{ASC}: ASCII log files
+    \item \textbf{BLF}: Binary log files (Vector)
+    \item \textbf{CSV}: Comma-separated values
+    \item \textbf{LOG}: Generic log format
+\end{itemize}
+
+\subsubsection{Export Formats}
+
+\begin{itemize}
+    \item \textbf{CSV}: For spreadsheet analysis
+    \item \textbf{ASC}: Vector ASCII format
+    \item \textbf{JSON}: Structured data export
+    \item \textbf{XML}: Standardized data exchange
+    \item \textbf{PDF}: Formatted reports
+\end{itemize}
+
+\subsection{API Reference}
+
+The application provides a comprehensive Python API for automation:
+
+\begin{lstlisting}[language=python]
+# Example API usage
+from can_analyzer import CANAnalyzer
+
+# Initialize analyzer
+analyzer = CANAnalyzer()
+
+# Connect to CAN interface
+analyzer.connect(interface='socketcan', channel='can0', bitrate=500000)
+
+# Send a message
+message = analyzer.create_message(id=0x123, data=[0x01, 0x02, 0x03])
+analyzer.send_message(message)
+
+# Start UDS session
+uds = analyzer.get_uds_client(request_id=0x7E0, response_id=0x7E8)
+uds.start_session(session_type=0x02)
+
+# Read DTC
+dtcs = uds.read_dtc()
+print(f"Found {len(dtcs)} DTCs")
+\end{lstlisting}
+
+\subsection{Configuration File Format}
+
+Configuration files use JSON format:
+
+\begin{lstlisting}[language=json]
+{
+    "can_interface": {
+        "type": "socketcan",
+        "channel": "can0",
+        "bitrate": 500000,
+        "extended_frames": true
+    },
+    "uds_settings": {
+        "request_id": "0x7E0",
+        "response_id": "0x7E8",
+        "timeout": 1.0,
+        "tester_present_interval": 2.0
+    },
+    "ui_settings": {
+        "theme": "dark",
+        "log_buffer_size": 10000,
+        "auto_scroll": true
+    }
+}
+\end{lstlisting}
+
+% Conclusion
+\section{Conclusion}
+
+The Professional CAN Bus Analyzer provides a comprehensive solution for automotive diagnostic and CAN bus analysis tasks. With its advanced features, intuitive interface, and extensive customization options, it serves as an essential tool for automotive professionals.
+
+\subsection{Getting Help}
+
+For additional support:
+
+\begin{itemize}
+    \item \textbf{Documentation}: Refer to this guide and inline help
+    \item \textbf{Community}: Join user forums and discussions
+    \item \textbf{Support}: Contact technical support for complex issues
+    \item \textbf{Updates}: Check for application updates regularly
+\end{itemize}
+
+\subsection{Contributing}
+
+The application welcomes contributions:
+
+\begin{itemize}
+    \item \textbf{Bug Reports}: Report issues with detailed information
+    \item \textbf{Feature Requests}: Suggest new functionality
+    \item \textbf{Code Contributions}: Submit improvements and fixes
+    \item \textbf{Documentation}: Help improve this guide
+\end{itemize}
+
+\vspace{2cm}
+
+\begin{center}
+\textcolor{canblue}{\Large\textbf{Thank you for using Professional CAN Bus Analyzer!}}
+
+\vspace{0.5cm}
+
+\textcolor{cangray}{
+For the latest updates and support, visit our project repository.\\
+Version 1.0 - \today
+}
+\end{center}
+
+\end{document}
