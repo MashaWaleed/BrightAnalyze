@@ -111,11 +111,10 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
+        # Install minimal dependencies needed for PyInstaller to work with PySide6
         sudo apt-get install -y \
-          libegl1 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
-          libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
-          libfontconfig1 libxcb-shape0 libxcb-cursor0 libgl1-mesa-glx \
-          libglib2.0-0 libxcb-xfixes0
+          libglib2.0-0 libfontconfig1 libdbus-1-3 \
+          libxcb1 libx11-6 libxext6 libxrender1
     
     - name: Install Python dependencies
       run: |
@@ -125,7 +124,26 @@ jobs:
     
     - name: Build Linux executable
       run: |
-        pyinstaller CANAnalyzer-Linux.spec
+        # Try to build with spec file
+        pyinstaller CANAnalyzer-Linux.spec || \
+        # Fallback: build with command line options
+        pyinstaller --onefile --name CANAnalyzer-Linux \
+          --add-data "ui:ui" \
+          --hidden-import=PySide6.QtCore \
+          --hidden-import=PySide6.QtWidgets \
+          --hidden-import=PySide6.QtGui \
+          --hidden-import=can.interfaces.slcan \
+          --hidden-import=can.interfaces.socketcan \
+          --hidden-import=udsoncan \
+          --hidden-import=udsoncan.client \
+          --hidden-import=udsoncan.connections \
+          --hidden-import=udsoncan.services \
+          --hidden-import=isotp \
+          --hidden-import=serial.tools.list_ports \
+          --hidden-import=cantools \
+          --hidden-import=cantools.database \
+          --hidden-import=cantools.database.can \
+          main.py
         
     - name: Make executable
       run: |
