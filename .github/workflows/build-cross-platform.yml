@@ -1,6 +1,9 @@
 
 name: Build Cross-Platform Executables
 
+permissions:
+  contents: write
+  
 on:
   push:
     branches: [ main, master ]
@@ -294,12 +297,11 @@ jobs:
           
           **🔧 Built for automotive professionals** | **🌟 Open source** | **❤️ Community driven**
         files: |
-          windows-artifacts/CANAnalyzer-Windows-v${{ env.APP_VERSION }}.zip
-          windows-artifacts/CANAnalyzer-Windows.exe
-          linux-artifacts/CANAnalyzer-Linux-v${{ env.APP_VERSION }}.tar.gz  
-          linux-artifacts/CANAnalyzer-Linux
+          CANAnalyzer-Windows-v${{ env.APP_VERSION }}.zip
+          dist/CANAnalyzer-Windows.exe
+          CANAnalyzer-Linux-v${{ env.APP_VERSION }}.tar.gz  
+          dist/CANAnalyzer-Linux
         draft: false
         prerelease: false
-        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
