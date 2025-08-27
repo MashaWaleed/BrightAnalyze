@@ -1803,6 +1803,9 @@ class AdvancedLeftSidebar(QScrollArea):
                 'dlc': msg.dlc,
                 'data': data_bytes,
                 'extended': msg_id > 0x7FF,  # Auto-detect extended ID
+                'fd': msg.fd,  # Include CAN FD flag
+                'brs': msg.brs,  # Include Bit Rate Switch flag
+                'esi': msg.esi,  # Include Error State Indicator flag
             }
             
             # Emit signal to send message

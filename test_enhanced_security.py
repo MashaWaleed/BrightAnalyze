@@ -17,7 +17,7 @@ except ImportError as e:
     print(f"❌ Failed to import Security DLL Interface: {e}")
 
 try:
-    from enhanced_security_widget import EnhancedSecurityWidget
+    from ui.enhanced_security_widget import SecurityAccessWidget
     print("✅ Enhanced Security Widget imported successfully")
 except ImportError as e:
     print(f"❌ Failed to import Enhanced Security Widget: {e}")
@@ -85,7 +85,7 @@ def test_file_structure():
     
     required_files = [
         'security_dll_interface.py',
-        'enhanced_security_widget.py',
+        'ui/enhanced_security_widget.py',
         'security_test_simulator.py',
         'security_algorithm_analyzer.py',
         'ui/diagnostics_panel.py',

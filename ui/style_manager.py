@@ -322,20 +322,40 @@ class ModernStyleManager(QObject):
         }
         
         /* Splitter */
+        QSplitter {
+            handle-width: 4px;
+        }
+        
         QSplitter::handle {
-            background-color: #e9ecef;
+            background-color: transparent;
         }
         
         QSplitter::handle:horizontal {
-            width: 2px;
+            width: 4px;
+            background-color: #f1f3f4;
+            border-left: 1px solid #e8eaed;
+            border-right: 1px solid #e8eaed;
         }
         
         QSplitter::handle:vertical {
-            height: 2px;
+            height: 4px;
+            background-color: #f1f3f4;
+            border-top: 1px solid #e8eaed;
+            border-bottom: 1px solid #e8eaed;
         }
         
         QSplitter::handle:hover {
-            background-color: #007bff;
+            background-color: #4285f4;
+        }
+        
+        QSplitter::handle:horizontal:hover {
+            border-left: 1px solid #1a73e8;
+            border-right: 1px solid #1a73e8;
+        }
+        
+        QSplitter::handle:vertical:hover {
+            border-top: 1px solid #1a73e8;
+            border-bottom: 1px solid #1a73e8;
         }
         
         /* Checkbox and Radio Button */
@@ -749,6 +769,43 @@ class ModernStyleManager(QObject):
         QRadioButton::indicator:checked {
             background-color: #1976d2;
             border-color: #1976d2;
+        }
+        
+        /* Splitter - Dark */
+        QSplitter {
+            handle-width: 4px;
+        }
+        
+        QSplitter::handle {
+            background-color: transparent;
+        }
+        
+        QSplitter::handle:horizontal {
+            width: 4px;
+            background-color: #3c4043;
+            border-left: 1px solid #5f6368;
+            border-right: 1px solid #5f6368;
+        }
+        
+        QSplitter::handle:vertical {
+            height: 4px;
+            background-color: #3c4043;
+            border-top: 1px solid #5f6368;
+            border-bottom: 1px solid #5f6368;
+        }
+        
+        QSplitter::handle:hover {
+            background-color: #8ab4f8;
+        }
+        
+        QSplitter::handle:horizontal:hover {
+            border-left: 1px solid #aecbfa;
+            border-right: 1px solid #aecbfa;
+        }
+        
+        QSplitter::handle:vertical:hover {
+            border-top: 1px solid #aecbfa;
+            border-bottom: 1px solid #aecbfa;
         }
         
         /* Labels - Dark */

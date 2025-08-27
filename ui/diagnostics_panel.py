@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
                                QPushButton, QComboBox, QTextEdit, QTableWidget,
                                QTableWidgetItem, QCheckBox, QSpinBox, QProgressBar,
                                QSplitter, QTreeWidget, QTreeWidgetItem, QMessageBox,
-                               QApplication, QFileDialog)
+                               QApplication, QFileDialog, QScrollArea, QSizePolicy)
 from PySide6.QtCore import Signal, Qt, QTimer
 from PySide6.QtGui import QFont, QColor
 
@@ -58,25 +58,32 @@ class DiagnosticsPanel(QWidget):
             self.update_connection_status()
         
     def setup_ui(self):
-        """Setup the diagnostics panel UI"""
+        """Setup the diagnostics panel UI with scroll areas that expand to fill available space"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
         
-        # Connection controls at top
+        # Remove fixed height - let the panel expand to fill available space in the stacked widget
+        # The panel will expand to the upper boundary of the status bar automatically
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        # Connection controls at top (always visible)
         self.setup_connection_controls(layout)
         
-        # Create tab widget for different diagnostic functions
+        # Create tab widget for different diagnostic functions with scroll areas
         self.tab_widget = QTabWidget()
+        # Let tab widget expand to fill remaining space after connection controls
+        self.tab_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
-        # Setup all tabs
+        # Setup tabs with scroll areas
         self.setup_uds_services_tab()
         self.setup_dtc_tab()
         self.setup_data_by_id_tab()
         self.setup_security_tab()
-        self.setup_obd_tab()
+        # Removed OBD tab as not needed
         
         layout.addWidget(self.tab_widget)
+        # Removed addStretch() to allow tab widget to expand and fill available space
         
     def setup_connection_controls(self, layout):
         """Setup UDS connection controls"""
@@ -128,10 +135,12 @@ class DiagnosticsPanel(QWidget):
         layout.addWidget(connection_group)
         
     def setup_uds_services_tab(self):
-        """Setup UDS services tab"""
-        uds_widget = QWidget()
-        layout = QVBoxLayout(uds_widget)
+        """Setup UDS services tab with scroll area"""
+        # Create main widget for the tab content
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
         layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
         
         # Session management
         session_group = QGroupBox("🔐 Session Management")
@@ -217,13 +226,21 @@ class DiagnosticsPanel(QWidget):
         layout.addWidget(response_group)
         layout.addStretch()
         
-        self.tab_widget.addTab(uds_widget, "🛠️ UDS Services")
+        # Create scroll area and add content widget
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(content_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        self.tab_widget.addTab(scroll_area, "🛠️ UDS Services")
         
     def setup_dtc_tab(self):
-        """Setup DTC management tab"""
-        dtc_widget = QWidget()
-        layout = QVBoxLayout(dtc_widget)
+        """Setup DTC management tab with scroll area"""
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
         layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
         
         # DTC controls
         control_group = QGroupBox("🚨 DTC Management")
@@ -273,14 +290,23 @@ class DiagnosticsPanel(QWidget):
         details_layout.addWidget(self.dtc_details)
         
         layout.addWidget(details_group)
+        layout.addStretch()
         
-        self.tab_widget.addTab(dtc_widget, "🚨 DTCs")
+        # Create scroll area and add content widget
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(content_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        self.tab_widget.addTab(scroll_area, "🚨 DTCs")
         
     def setup_data_by_id_tab(self):
-        """Setup data by identifier tab"""
-        data_widget = QWidget()
-        layout = QVBoxLayout(data_widget)
+        """Setup data by identifier tab with scroll area"""
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
         layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
         
         # Data identifier controls
         id_group = QGroupBox("🆔 Data Identifier")
@@ -327,13 +353,21 @@ class DiagnosticsPanel(QWidget):
         layout.addWidget(values_group)
         layout.addStretch()
         
-        self.tab_widget.addTab(data_widget, "🆔 Data by ID")
+        # Create scroll area and add content widget
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(content_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        self.tab_widget.addTab(scroll_area, "🆔 Data by ID")
         
     def setup_security_tab(self):
-        """Setup enhanced security access tab with DLL support"""
-        security_widget = QWidget()
-        layout = QVBoxLayout(security_widget)
+        """Setup enhanced security access tab with DLL support and scroll area"""
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
         layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
         
         # Import the DLL interface
         try:
@@ -565,7 +599,14 @@ class DiagnosticsPanel(QWidget):
         
         layout.addStretch()
         
-        self.tab_widget.addTab(security_widget, "🔐 Security")
+        # Create scroll area and add content widget
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(content_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        self.tab_widget.addTab(scroll_area, "🔐 Security")
         
         # Connect DLL interface signals if available
         if self.dll_interface:
@@ -575,10 +616,11 @@ class DiagnosticsPanel(QWidget):
             self.dll_interface.key_calculated.connect(self.on_dll_key_calculated)
         
     def setup_obd_tab(self):
-        """Setup OBD-II tab"""
-        obd_widget = QWidget()
-        layout = QVBoxLayout(obd_widget)
+        """Setup OBD-II tab with scroll area"""
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
         layout.setSpacing(8)
+        layout.setContentsMargins(8, 8, 8, 8)
         
         # OBD-II Mode selection
         mode_group = QGroupBox("📊 OBD-II Modes")
@@ -615,7 +657,14 @@ class DiagnosticsPanel(QWidget):
         layout.addWidget(live_group)
         layout.addStretch()
         
-        self.tab_widget.addTab(obd_widget, "🚗 OBD-II")
+        # Create scroll area and add content widget
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(content_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        self.tab_widget.addTab(scroll_area, "🚗 OBD-II")
         
     # === Connection Methods ===
     
@@ -1304,23 +1353,64 @@ Status Breakdown:
     
     def apply_professional_style(self):
         """Apply professional styling to the panel"""
-        self.setStyleSheet(DIAGNOSTICS_STYLESHEET)
+        self.setStyleSheet(DIAGNOSTICS_STYLESHEET + """
+        /* Enhanced scroll area styling */
+        QScrollArea {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        
+        QScrollArea > QWidget > QWidget {
+            background-color: white;
+        }
+        
+        QScrollBar:vertical {
+            background-color: #f5f5f5;
+            width: 12px;
+            border-radius: 6px;
+        }
+        
+        QScrollBar::handle:vertical {
+            background-color: #c0c0c0;
+            border-radius: 6px;
+            min-height: 20px;
+        }
+        
+        QScrollBar::handle:vertical:hover {
+            background-color: #a0a0a0;
+        }
+        
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+            height: 0px;
+        }
+        """)
         
         # Set fonts
         mono_font = QFont("Consolas", 9)
-        self.response_text.setFont(mono_font)
+        if hasattr(self, 'response_text'):
+            self.response_text.setFont(mono_font)
         
-        # Table styling
-        for table in [self.dtc_table, self.data_values_table, self.obd_data_table]:
+        # Table styling - check if tables exist before styling
+        tables_to_style = []
+        if hasattr(self, 'dtc_table'):
+            tables_to_style.append(self.dtc_table)
+        if hasattr(self, 'data_values_table'):
+            tables_to_style.append(self.data_values_table)
+        if hasattr(self, 'obd_data_table'):
+            tables_to_style.append(self.obd_data_table)
+            
+        for table in tables_to_style:
             table.setAlternatingRowColors(True)
             table.setSelectionBehavior(QTableWidget.SelectRows)
             table.setShowGrid(True)
             table.setSortingEnabled(True)
         
         # Status labels styling
-        self.current_session_label.setStyleSheet(
-            "QLabel { background-color: #e3f2fd; padding: 4px; border-radius: 4px; }"
-        )
+        if hasattr(self, 'current_session_label'):
+            self.current_session_label.setStyleSheet(
+                "QLabel { background-color: #e3f2fd; padding: 4px; border-radius: 4px; }"
+            )
     
     def _debug_table_state(self, row_index):
         """Debug method to examine table state after updates"""

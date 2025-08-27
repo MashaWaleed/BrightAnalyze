@@ -514,9 +514,10 @@ class CANAnalyzerMainWindow(QMainWindow):
             msg_id = msg['id']
             data = msg['data']
             extended = msg.get('extended', False)
-            print(f"[DEBUG] Sending CAN message: ID=0x{msg_id:X}, Data={data}, Extended={extended}")
+            fd = msg.get('fd', False)  # Get CAN FD flag
+            print(f"[DEBUG] Sending CAN message: ID=0x{msg_id:X}, Data={data}, Extended={extended}, FD={fd}")
             
-            success = self.can_manager.send_message(msg_id, data, extended_id=extended)
+            success = self.can_manager.send_message(msg_id, data, extended_id=extended, fd=fd)
             print(f"[DEBUG] CAN send result: {success}")
             
             # Add TX message to current workspace's message log

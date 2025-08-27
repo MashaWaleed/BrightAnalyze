@@ -95,16 +95,52 @@ class CANBusManager(QObject):
         
         try:
             # Filter out conflicting parameters from kwargs
-            # Remove 'channel' from kwargs since we'll set it explicitly
-            clean_kwargs = {k: v for k, v in kwargs.items() if k not in ['channel', 'interface', 'bustype', 'bitrate']}
+            # Remove parameters that we set explicitly to avoid conflicts
+            clean_kwargs = {k: v for k, v in kwargs.items() if k not in ['channel', 'interface', 'bustype']}
+            # Note: Keep 'bitrate' and 'data_bitrate' for proper CAN FD support
             
             # Handle different drivers
             if driver == 'slcan':
                 # SLCAN driver for serial USB-to-CAN devices
+                print(f"[DEBUG] SLCAN clean_kwargs: {clean_kwargs}")
+                
+                # Extract CAN FD parameters for special handling
+                is_canfd = clean_kwargs.pop('is_canfd', False) or clean_kwargs.pop('fd', False)
+                data_bitrate = clean_kwargs.pop('data_bitrate', None)
+                fd_non_iso = clean_kwargs.pop('fd_non_iso', False)
+                
+                # Remove duplicate bitrate from kwargs if present
+                clean_kwargs.pop('bitrate', None)
+                
+                if is_canfd:
+                    print(f"[DEBUG] CAN FD mode requested: data_bitrate={data_bitrate}, fd_non_iso={fd_non_iso}")
+                    
+                    # For SLCAN CAN FD, we need to use BitTimingFd if data_bitrate is specified
+                    if data_bitrate:
+                        try:
+                            from can.bit_timing import BitTimingFd
+                            # Calculate timing parameters for CANable (80MHz clock)
+                            # These are approximate calculations - may need fine-tuning
+                            timing_fd = BitTimingFd(
+                                f_clock=80000000,  # 80MHz clock (typical for CANable)
+                                nom_brp=int(80000000 / (16 * bitrate)),  # Nominal prescaler
+                                nom_tseg1=13,      # Nominal time segment 1
+                                nom_tseg2=2,       # Nominal time segment 2  
+                                nom_sjw=1,         # Nominal sync jump width
+                                data_brp=int(80000000 / (16 * data_bitrate)),  # Data prescaler
+                                data_tseg1=13,     # Data time segment 1
+                                data_tseg2=2,      # Data time segment 2
+                                data_sjw=1         # Data sync jump width
+                            )
+                            clean_kwargs['timing'] = timing_fd
+                            print(f"[DEBUG] Created BitTimingFd for CAN FD: nom={bitrate}bps, data={data_bitrate}bps")
+                        except Exception as e:
+                            print(f"[WARNING] Failed to create BitTimingFd, falling back to bitrate only: {e}")
+                
                 self.bus = can.interface.Bus(
                     bustype='slcan',
                     channel=interface,  # e.g., '/dev/ttyACM0' or 'COM3'
-                    bitrate=bitrate,
+                    bitrate=bitrate if 'timing' not in clean_kwargs else None,  # Don't pass bitrate with timing
                     timeout=0.1,
                     **clean_kwargs
                 )
@@ -366,6 +402,7 @@ class CANBusManager(QObject):
                 # Create hex string for logging
                 hex_data = ' '.join(f'{b:02X}' for b in data_bytes) if data_bytes else '(no data)'
                 print(f"[DEBUG] Sent CAN message: ID=0x{message_id:X}, DLC={len(data_bytes)}, Data={hex_data}, Extended={extended_id}, FD={fd}")
+                
                 return True
                 
             except Exception as e:

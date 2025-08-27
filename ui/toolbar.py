@@ -47,6 +47,10 @@ class ModernToolbar(QWidget):
         self.filters_shown = True
         self.autoscroll_enabled = True
         
+        # Track active panel for navigation highlighting
+        self.active_panel = "message_log"  # Default active panel
+        self.nav_buttons = {}  # Will store navigation buttons for easy access
+        
         self.setup_ui()
         self.create_icons()
         self.apply_modern_style()
@@ -89,20 +93,35 @@ class ModernToolbar(QWidget):
     def create_navigation_section(self, layout):
         """Create navigation buttons for switching central panels"""
         self.nav_msglog_btn = self.create_modern_button("💬", "Show Message Log", "nav_msglog")
+        self.nav_msglog_btn.clicked.connect(lambda: self.set_active_panel("message_log"))
         self.nav_msglog_btn.clicked.connect(self.show_message_log)
         layout.addWidget(self.nav_msglog_btn)
 
         self.nav_plotter_btn = self.create_modern_button("📊", "Show Signal Plotter", "nav_plotter")
+        self.nav_plotter_btn.clicked.connect(lambda: self.set_active_panel("signal_plotter"))
         self.nav_plotter_btn.clicked.connect(self.show_signal_plotter)
         layout.addWidget(self.nav_plotter_btn)
 
         self.nav_console_btn = self.create_modern_button("🐍", "Show Python Console", "nav_console")
+        self.nav_console_btn.clicked.connect(lambda: self.set_active_panel("scripting_console"))
         self.nav_console_btn.clicked.connect(self.show_scripting_console)
         layout.addWidget(self.nav_console_btn)
 
         self.nav_diag_btn = self.create_modern_button("🔧", "Show Diagnostics Panel", "nav_diag")
+        self.nav_diag_btn.clicked.connect(lambda: self.set_active_panel("diagnostics_panel"))
         self.nav_diag_btn.clicked.connect(self.show_diagnostics_panel)
         layout.addWidget(self.nav_diag_btn)
+        
+        # Store navigation buttons for easy access
+        self.nav_buttons = {
+            "message_log": self.nav_msglog_btn,
+            "signal_plotter": self.nav_plotter_btn,
+            "scripting_console": self.nav_console_btn,
+            "diagnostics_panel": self.nav_diag_btn
+        }
+        
+        # Set initial active state
+        self.update_navigation_highlight()
         
     def create_connection_section(self, layout):
         """Create connection control buttons"""
@@ -416,3 +435,67 @@ class ModernToolbar(QWidget):
                 font-weight: 500;
             }
         """)
+        
+    def set_active_panel(self, panel_name):
+        """Set the active panel and update navigation highlighting"""
+        self.active_panel = panel_name
+        self.update_navigation_highlight()
+        
+    def update_navigation_highlight(self):
+        """Update the visual highlighting of navigation buttons"""
+        for panel_name, button in self.nav_buttons.items():
+            if panel_name == self.active_panel:
+                # Active button styling - preserve size and emoji display
+                button.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                  stop:0 #007bff, stop:1 #0056b3);
+                        color: white;
+                        border: 2px solid #0056b3;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        font-size: 16px;
+                        min-width: 36px;
+                        min-height: 36px;
+                        max-width: 36px;
+                        max-height: 36px;
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                  stop:0 #0056b3, stop:1 #003d82);
+                        border-color: #003d82;
+                    }
+                    QPushButton:pressed {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                  stop:0 #003d82, stop:1 #002952);
+                        border-color: #002952;
+                    }
+                """)
+            else:
+                # Inactive button styling - preserve size and emoji display
+                button.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                  stop:0 #ffffff, stop:1 #f8f9fa);
+                        color: #495057;
+                        border: 1px solid #ced4da;
+                        border-radius: 6px;
+                        font-weight: normal;
+                        font-size: 16px;
+                        min-width: 36px;
+                        min-height: 36px;
+                        max-width: 36px;
+                        max-height: 36px;
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                  stop:0 #e9ecef, stop:1 #dee2e6);
+                        border-color: #adb5bd;
+                        color: #212529;
+                    }
+                    QPushButton:pressed {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                                  stop:0 #dee2e6, stop:1 #ced4da);
+                        border-color: #6c757d;
+                    }
+                """)
